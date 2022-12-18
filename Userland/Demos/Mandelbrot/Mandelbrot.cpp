@@ -386,13 +386,8 @@ ErrorOr<void> Mandelbrot::export_image(DeprecatedString const& export_path, Imag
         VERIFY_NOT_REACHED();
     }
     m_set.resize(size());
-    auto file = fopen(export_path.characters(), "wb");
-    if (!file) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Could not open '{}' for writing.", export_path), "Mandelbrot"sv, GUI::MessageBox::Type::Error);
-        return {};
-    }
-    fwrite(encoded_data.data(), 1, encoded_data.size(), file);
-    fclose(file);
+    auto file = TRY(Core::Stream::File::open(export_path, Core::Stream::OpenMode::Write | Core::Stream::OpenMode::Truncate));
+    TRY(file->write_entire_buffer(encoded_data));
     return {};
 }
 
