@@ -118,7 +118,7 @@ public:
     Function<void(int done, int total)> on_thumbnail_progress;
     Function<void()> on_complete;
     Function<void(int error, char const* error_string)> on_directory_change_error;
-    Function<void(int error, char const* error_string)> on_rename_error;
+    Function<void(Error error)> on_rename_error;
     Function<void(DeprecatedString const& old_name, DeprecatedString const& new_name)> on_rename_successful;
     Function<void()> on_root_path_removed;
 

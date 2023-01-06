@@ -13,6 +13,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/System.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FileSystemModel.h>
@@ -763,10 +764,11 @@ void FileSystemModel::set_data(ModelIndex const& index, Variant const& data)
     Node& node = const_cast<Node&>(this->node(index));
     auto dirname = LexicalPath::dirname(node.full_path());
     auto new_full_path = DeprecatedString::formatted("{}/{}", dirname, data.to_deprecated_string());
-    int rc = rename(node.full_path().characters(), new_full_path.characters());
-    if (rc < 0) {
+
+    auto rename_operation = Core::System::rename(node.full_path(), new_full_path);
+    if (rename_operation.is_error()) {
         if (on_rename_error)
-            on_rename_error(errno, strerror(errno));
+            on_rename_error(rename_operation.release_error());
         return;
     }
 

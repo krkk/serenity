@@ -177,8 +177,8 @@ void DirectoryView::setup_model()
             on_path_change(failed_path, false, false);
     };
 
-    m_model->on_rename_error = [this](int, char const* error_string) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Unable to rename file: {}", error_string));
+    m_model->on_rename_error = [this](Error error) {
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Unable to rename file: {}", error));
     };
 
     m_model->on_complete = [this] {
