@@ -11,6 +11,7 @@
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/RecentFileList.h>
 
 namespace FileSystemAccessServer {
 
@@ -98,6 +99,10 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
         } else {
             async_handle_prompt_end(request_id, 0, IPC::File(*file.release_value(), IPC::File::CloseAfterSending), path);
         }
+
+        auto maybe_error = GUI::RecentFile::write_to_history(path);
+        if (maybe_error.is_error())
+            dbgln("Couldn't append file to access history: {}", maybe_error.error());
     } else {
         async_handle_prompt_end(request_id, -1, Optional<IPC::File> {}, path);
     }
@@ -156,6 +161,10 @@ void ConnectionFromClient::prompt_helper(i32 request_id, Optional<DeprecatedStri
             m_approved_files.set(user_picked_file.value(), new_permissions);
 
             async_handle_prompt_end(request_id, 0, IPC::File(*file.release_value(), IPC::File::CloseAfterSending), user_picked_file);
+
+            auto maybe_error = GUI::RecentFile::write_to_history(user_picked_file.value());
+            if (maybe_error.is_error())
+                dbgln("Couldn't append file to access history: {}", maybe_error.error());
         }
     } else {
         async_handle_prompt_end(request_id, -1, Optional<IPC::File> {}, Optional<DeprecatedString> {});
