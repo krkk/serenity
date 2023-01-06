@@ -14,6 +14,8 @@
 #include <LibGUI/Model.h>
 
 namespace GUI {
+class Tray;
+class RecentFilesModel;
 
 class FilePicker final
     : public Dialog
@@ -40,6 +42,9 @@ private:
 
     void set_path(DeprecatedString const&);
 
+    void setup_filesystem_model(DeprecatedString const& root_path);
+    ErrorOr<void> setup_recent_model();
+
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
@@ -64,8 +69,13 @@ private:
         size_t tray_item_index { 0 };
     };
 
+    RefPtr<Action> m_open_parent_directory_action;
+    RefPtr<Action> m_mkdir_action;
+
     RefPtr<MultiView> m_view;
-    NonnullRefPtr<FileSystemModel> m_model;
+    RefPtr<Model> m_model;
+    RefPtr<Tray> m_common_locations_tray;
+    RefPtr<Button> m_ok_button;
     DeprecatedString m_selected_file;
 
     RefPtr<GUI::Label> m_error_label;

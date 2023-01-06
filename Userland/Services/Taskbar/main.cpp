@@ -9,6 +9,7 @@
 #include "TaskbarWindow.h"
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
+#include <AK/String.h>
 #include <AK/Try.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
@@ -24,6 +25,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuItem.h>
 #include <LibGUI/Process.h>
+#include <LibGUI/RecentFileList.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibMain/Main.h>
@@ -37,6 +39,7 @@
 
 static ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories();
 static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window&);
+static ErrorOr<void> build_recent_files_menu();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -90,6 +93,8 @@ Color g_menu_selection_color;
 
 Vector<Gfx::SystemThemeMetaData> g_themes;
 RefPtr<GUI::Menu> g_themes_menu;
+RefPtr<GUI::Menu> g_recent_files_menu;
+RefPtr<Core::FileWatcher> g_recent_file_watcher;
 GUI::ActionGroup g_themes_group;
 
 ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories()
@@ -112,6 +117,28 @@ ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories()
     quick_sort(sorted_app_categories);
 
     return sorted_app_categories;
+}
+
+ErrorOr<void> build_recent_files_menu()
+{
+    auto files = TRY(GUI::RecentFile::read_history());
+    if (g_recent_files_menu->items().size() == 0) {
+        auto dummy_action = GUI::Action::create("(empty)", [](auto&) {});
+        dummy_action->set_enabled(false);
+        TRY(g_recent_files_menu->try_add_action(dummy_action));
+        return {};
+    }
+    for (int i = 0; i < min(10, files.size()); ++i) {
+        auto& file = files[i];
+        auto icon = GUI::FileIconProvider::icon_for_path(file.full_path(), 0).bitmap_for_size(16);
+        auto action = GUI::Action::create(file.basename(), icon, [path = DeprecatedString(file.full_path())](auto&) {
+            Desktop::Launcher::open(URL::create_with_url_or_path(path));
+        });
+        if (!file.exists())
+            action->set_enabled(false);
+        TRY(g_recent_files_menu->try_add_action(action));
+    }
+    return {};
 }
 
 ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
@@ -253,6 +280,25 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
             action->set_checked(!theme_overridden && action->text() == current_theme_name);
         }
     };
+
+    g_recent_files_menu = TRY(system_menu->try_add_submenu("Recent Files"));
+    TRY(build_recent_files_menu());
+
+    auto setup_watcher = []() -> ErrorOr<void> {
+        auto watcher = TRY(Core::FileWatcher::create());
+        auto path = TRY(GUI::RecentFile::history_path());
+        TRY(watcher->add_watch(path.to_deprecated_string(), Core::FileWatcherEvent::Type::ContentModified));
+        watcher->on_change = [](auto&) {
+            g_recent_files_menu->remove_all_actions();
+            auto maybe_error = build_recent_files_menu();
+            if (maybe_error.is_error())
+                dbgln("Couldn't rebuild recent files menu: {}", maybe_error.error());
+        };
+        g_recent_file_watcher = move(watcher);
+        return {};
+    };
+    if (auto maybe_error = setup_watcher(); maybe_error.is_error())
+        dbgln("Couldn't setup watcher: {}", maybe_error.error());
 
     system_menu->add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/Settings"sv);

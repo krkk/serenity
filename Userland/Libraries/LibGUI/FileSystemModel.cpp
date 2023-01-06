@@ -771,7 +771,6 @@ void FileSystemModel::set_data(ModelIndex const& index, Variant const& data)
             on_rename_error(rename_operation.release_error());
         return;
     }
-
     if (on_rename_successful)
         on_rename_successful(node.full_path(), new_full_path);
 }
