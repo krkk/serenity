@@ -86,6 +86,7 @@ set(SOURCES
     ProcessChooser.cpp
     Progressbar.cpp
     RadioButton.cpp
+    RecentFileList.cpp
     RegularEditingEngine.cpp
     ResizeCorner.cpp
     RunningProcessesModel.cpp
