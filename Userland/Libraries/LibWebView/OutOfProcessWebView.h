@@ -135,6 +135,8 @@ private:
     virtual void focusout_event(GUI::FocusEvent&) override;
     virtual void show_event(GUI::ShowEvent&) override;
     virtual void hide_event(GUI::HideEvent&) override;
+    virtual void drag_enter_event(GUI::DragEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
     // ^AbstractScrollableWidget
     virtual void did_scroll() override;

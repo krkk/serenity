@@ -7,6 +7,7 @@
 #include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
 #include <AK/DeprecatedString.h>
+#include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
@@ -195,6 +196,29 @@ void OutOfProcessWebView::mousewheel_event(GUI::MouseEvent& event)
 void OutOfProcessWebView::doubleclick_event(GUI::MouseEvent& event)
 {
     enqueue_input_event(event);
+}
+
+void OutOfProcessWebView::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (on_url_drop && mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
+void OutOfProcessWebView::drop_event(GUI::DropEvent& event)
+{
+    if (!on_url_drop)
+        return;
+    event.accept();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+
+        window()->move_to_front();
+        on_url_drop(urls.first());
+    }
 }
 
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
