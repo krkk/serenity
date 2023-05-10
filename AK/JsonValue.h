@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Karol Kosek <krkk@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,8 +8,8 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <AK/Optional.h>
 #include <AK/StringBuilder.h>
+#include <AK/Variant.h>
 
 #ifndef KERNEL
 #    include <AK/DeprecatedString.h>
@@ -16,56 +17,46 @@
 
 namespace AK {
 
-class JsonValue {
-public:
-    enum class Type {
-        Null,
-        Int32,
-        UnsignedInt32,
-        Int64,
-        UnsignedInt64,
-#if !defined(KERNEL)
-        Double,
+namespace Detail {
+struct Boolean {
+    bool value;
+};
+
+#ifndef KERNEL
+using JsonValueUnderlyingType = AK::Variant<Empty, i32, u32, i64, u64, double, Boolean, DeprecatedString, JsonArray*, JsonObject*>;
+#else
+using JsonValueUnderlyingType = AK::Variant<Empty, i32, u32, i64, u64, Boolean, JsonArray*, JsonObject*>;
 #endif
-        Bool,
-        String,
-        Array,
-        Object,
-    };
+}
+
+class JsonValue : public Detail::JsonValueUnderlyingType {
+public:
+    using Detail::JsonValueUnderlyingType::Variant;
 
     static ErrorOr<JsonValue> from_string(StringView);
 
     JsonValue() = default;
-    explicit JsonValue(Type);
     ~JsonValue() { clear(); }
 
     JsonValue(JsonValue const&);
-    JsonValue(JsonValue&&);
-
     JsonValue& operator=(JsonValue const&);
-    JsonValue& operator=(JsonValue&&);
 
-    JsonValue(int);
-    JsonValue(unsigned);
-    JsonValue(long);
-    JsonValue(long unsigned);
     JsonValue(long long);
     JsonValue(long long unsigned);
 
-#if !defined(KERNEL)
-    JsonValue(double);
-#endif
-    JsonValue(char const*);
 #ifndef KERNEL
-    JsonValue(DeprecatedString const&);
+    template<typename T>
+    JsonValue(T&& value)
+    requires(IsConstructible<DeprecatedString, T>)
+        : JsonValue(DeprecatedString(forward<T>(value)))
+    {
+    }
 #endif
-    JsonValue(StringView);
 
     template<typename T>
     requires(SameAs<RemoveCVReference<T>, bool>)
     JsonValue(T value)
-        : m_type(Type::Bool)
-        , m_value { .as_bool = value }
+        : Detail::JsonValueUnderlyingType(Detail::Boolean { value })
     {
     }
 
@@ -120,11 +111,7 @@ public:
 
     FlatPtr to_addr(FlatPtr default_value = 0) const
     {
-#ifdef __LP64__
-        return to_u64(default_value);
-#else
-        return to_u32(default_value);
-#endif
+        return to_number<FlatPtr>(default_value);
     }
 
     bool to_bool(bool default_value = false) const
@@ -134,148 +121,96 @@ public:
         return as_bool();
     }
 
-    i32 as_i32() const
-    {
-        VERIFY(is_i32());
-        return m_value.as_i32;
-    }
-
-    u32 as_u32() const
-    {
-        VERIFY(is_u32());
-        return m_value.as_u32;
-    }
-
-    i64 as_i64() const
-    {
-        VERIFY(is_i64());
-        return m_value.as_i64;
-    }
-
-    u64 as_u64() const
-    {
-        VERIFY(is_u64());
-        return m_value.as_u64;
-    }
-
-    bool as_bool() const
-    {
-        VERIFY(is_bool());
-        return m_value.as_bool;
-    }
+    i32 as_i32() const { return get<i32>(); }
+    u32 as_u32() const { return get<u32>(); }
+    i64 as_i64() const { return get<i64>(); }
+    u64 as_u64() const { return get<u64>(); }
+    bool as_bool() const { return get<Detail::Boolean>().value; }
 
 #ifndef KERNEL
     DeprecatedString as_string() const
     {
-        VERIFY(is_string());
-        return *m_value.as_string;
+        return get<DeprecatedString>();
     }
 #endif
 
     JsonObject& as_object()
     {
-        VERIFY(is_object());
-        return *m_value.as_object;
+        return *get<JsonObject*>();
     }
-
-    JsonObject const& as_object() const
-    {
-        VERIFY(is_object());
-        return *m_value.as_object;
-    }
-
-    JsonArray& as_array()
-    {
-        VERIFY(is_array());
-        return *m_value.as_array;
-    }
-
-    JsonArray const& as_array() const
-    {
-        VERIFY(is_array());
-        return *m_value.as_array;
-    }
+    JsonObject const& as_object() const { return *get<JsonObject*>(); }
+    JsonArray& as_array() { return *get<JsonArray*>(); }
+    JsonArray const& as_array() const { return *get<JsonArray*>(); }
 
 #if !defined(KERNEL)
     double as_double() const
     {
-        VERIFY(is_double());
-        return m_value.as_double;
+        return get<double>();
     }
 #endif
-
-    Type type() const
+    bool is_null() const
     {
-        return m_type;
+        return has<Empty>();
     }
+    bool is_bool() const { return has<Detail::Boolean>(); }
+#ifndef KERNEL
+    bool is_string() const
+    {
+        return has<DeprecatedString>();
+    }
+#endif
+    bool is_i32() const
+    {
+        return has<i32>();
+    }
+    bool is_u32() const { return has<u32>(); }
+    bool is_i64() const { return has<i64>(); }
+    bool is_u64() const { return has<u64>(); }
 
-    bool is_null() const { return m_type == Type::Null; }
-    bool is_bool() const { return m_type == Type::Bool; }
-    bool is_string() const { return m_type == Type::String; }
-    bool is_i32() const { return m_type == Type::Int32; }
-    bool is_u32() const { return m_type == Type::UnsignedInt32; }
-    bool is_i64() const { return m_type == Type::Int64; }
-    bool is_u64() const { return m_type == Type::UnsignedInt64; }
 #if !defined(KERNEL)
     bool is_double() const
     {
-        return m_type == Type::Double;
+        return has<double>();
     }
 #endif
     bool is_array() const
     {
-        return m_type == Type::Array;
+        return has<JsonArray*>();
     }
-    bool is_object() const { return m_type == Type::Object; }
+    bool is_object() const { return has<JsonObject*>(); }
+
     bool is_number() const
     {
-        switch (m_type) {
-        case Type::Int32:
-        case Type::UnsignedInt32:
-        case Type::Int64:
-        case Type::UnsignedInt64:
-#if !defined(KERNEL)
-        case Type::Double:
+#ifndef KERNEL
+        return has<i32>() || has<u32>() || has<i64>() || has<u64>() || has<double>();
+#else
+        return has<i32>() || has<u32>() || has<i64>() || has<u64>();
 #endif
-            return true;
-        default:
-            return false;
-        }
     }
 
     template<typename T>
     T to_number(T default_value = 0) const
     {
-#if !defined(KERNEL)
-        if (is_double())
-            return (T)as_double();
+        return visit(
+#ifndef KERNEL
+            [](double v) -> T { return v; },
 #endif
-        if (type() == Type::Int32)
-            return (T)as_i32();
-        if (type() == Type::UnsignedInt32)
-            return (T)as_u32();
-        if (type() == Type::Int64)
-            return (T)as_i64();
-        if (type() == Type::UnsignedInt64)
-            return (T)as_u64();
-        return default_value;
+            [](Integral auto v) -> T { return v; },
+            [default_value](auto) { return default_value; });
     }
 
     template<Integral T>
     bool is_integer() const
     {
-        switch (m_type) {
-        case Type::Int32:
-            return is_within_range<T>(m_value.as_i32);
-        case Type::UnsignedInt32:
-            return is_within_range<T>(m_value.as_u32);
-        case Type::Int64:
-            return is_within_range<T>(m_value.as_i64);
-        case Type::UnsignedInt64:
-            return is_within_range<T>(m_value.as_u64);
-        default:
-            return false;
-        }
+        if (has<i32>())
+            return is_within_range<T>(get<i32>());
+        if (has<u32>())
+            return is_within_range<T>(get<u32>());
+        if (has<i64>())
+            return is_within_range<T>(get<i64>());
+        if (has<u64>())
+            return is_within_range<T>(get<u64>());
+        return false;
     }
 
     template<Integral T>
@@ -283,41 +218,20 @@ public:
     {
         VERIFY(is_integer<T>());
 
-        switch (m_type) {
-        case Type::Int32:
-            return static_cast<T>(m_value.as_i32);
-        case Type::UnsignedInt32:
-            return static_cast<T>(m_value.as_u32);
-        case Type::Int64:
-            return static_cast<T>(m_value.as_i64);
-        case Type::UnsignedInt64:
-            return static_cast<T>(m_value.as_u64);
-        default:
-            VERIFY_NOT_REACHED();
-        }
+        if (has<i32>())
+            return static_cast<T>(get<i32>());
+        if (has<u32>())
+            return static_cast<T>(get<u32>());
+        if (has<i64>())
+            return static_cast<T>(get<i64>());
+        if (has<u64>())
+            return static_cast<T>(get<u64>());
+        VERIFY_NOT_REACHED();
     }
 
 private:
     void clear();
     void copy_from(JsonValue const&);
-
-    Type m_type { Type::Null };
-
-    union {
-#ifndef KERNEL
-        StringImpl* as_string { nullptr };
-#endif
-        JsonArray* as_array;
-        JsonObject* as_object;
-#if !defined(KERNEL)
-        double as_double;
-#endif
-        i32 as_i32;
-        u32 as_u32;
-        i64 as_i64;
-        u64 as_u64;
-        bool as_bool;
-    } m_value;
 };
 
 #ifndef KERNEL

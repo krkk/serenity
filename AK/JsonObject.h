@@ -141,44 +141,22 @@ inline typename Builder::OutputType JsonObject::serialized() const
 template<typename Builder>
 inline void JsonValue::serialize(Builder& builder) const
 {
-    switch (m_type) {
-    case Type::String: {
-        builder.append('\"');
-        builder.append_escaped_for_json({ m_value.as_string->characters(), m_value.as_string->length() });
-        builder.append('\"');
-    } break;
-    case Type::Array:
-        m_value.as_array->serialize(builder);
-        break;
-    case Type::Object:
-        m_value.as_object->serialize(builder);
-        break;
-    case Type::Bool:
-        builder.append(m_value.as_bool ? "true"sv : "false"sv);
-        break;
+    visit(
 #if !defined(KERNEL)
-    case Type::Double:
-        builder.appendff("{}", m_value.as_double);
-        break;
+        [&](DeprecatedString const& v) {
+            builder.append('\"');
+            builder.append_escaped_for_json(v);
+            builder.append('\"');
+        },
 #endif
-    case Type::Int32:
-        builder.appendff("{}", as_i32());
-        break;
-    case Type::Int64:
-        builder.appendff("{}", as_i64());
-        break;
-    case Type::UnsignedInt32:
-        builder.appendff("{}", as_u32());
-        break;
-    case Type::UnsignedInt64:
-        builder.appendff("{}", as_u64());
-        break;
-    case Type::Null:
-        builder.append("null"sv);
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
+        [&](JsonArray* v) { v->serialize(builder); },
+        [&](JsonObject* v) { v->serialize(builder); },
+        [&](Detail::Boolean v) { builder.append(v.value ? "true"sv : "false"sv); },
+#if !defined(KERNEL)
+        [&](double v) { builder.appendff("{}", v); },
+#endif
+        [&](Integral auto v) { builder.appendff("{}", v); },
+        [&](Empty) { builder.append("null"sv); });
 }
 
 template<typename Builder>

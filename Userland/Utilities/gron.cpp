@@ -100,20 +100,19 @@ static void print(StringView name, JsonValue const& value, Vector<DeprecatedStri
         trail.take_last();
         return;
     }
-    switch (value.type()) {
-    case JsonValue::Type::Null:
-        out("{}", color_null);
-        break;
-    case JsonValue::Type::Bool:
-        out("{}", color_bool);
-        break;
-    case JsonValue::Type::String:
-        out("{}", color_string);
-        break;
-    default:
-        out("{}", color_index);
-        break;
-    }
+    value.visit(
+        [](Empty) {
+            out("{}", color_null);
+        },
+        [](AK::Detail::Boolean) {
+            out("{}", color_bool);
+        },
+        [](DeprecatedString const&) {
+            out("{}", color_string);
+        },
+        [](auto) {
+            out("{}", color_index);
+        });
 
     outln("{}{};", value.serialized<StringBuilder>(), color_off);
 }
