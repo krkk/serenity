@@ -265,7 +265,7 @@ HashMap<DeprecatedString, DeprecatedString> Reader::metadata() const
         return {};
     HashMap<DeprecatedString, DeprecatedString> metadata;
     metadata_json_value.value().as_object().for_each_member([&](auto& key, auto& value) {
-        metadata.set(key, value.as_string_or({}));
+        metadata.set(key, value.as_deprecated_string_or({}));
     });
     return metadata;
 }

@@ -75,7 +75,7 @@ public:
     ErrorOr<void> serialize(Builder&) const;
 
 #ifndef KERNEL
-    DeprecatedString as_string_or(DeprecatedString const& alternative) const
+    DeprecatedString as_deprecated_string_or(DeprecatedString const& alternative) const
     {
         if (is_string())
             return as_deprecated_string();
