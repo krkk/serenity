@@ -180,7 +180,7 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
             auto& values_array = values.value();
             for (auto& type : values_array.values()) {
                 VERIFY(type.is_string());
-                auto type_name = type.as_string();
+                auto type_name = type.as_deprecated_string();
                 // Skip identifiers.
                 if (type_name[0] != '<')
                     continue;
@@ -258,7 +258,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
             auto& values_array = values.value();
             for (auto& identifier : values_array.values()) {
                 VERIFY(identifier.is_string());
-                auto identifier_name = identifier.as_string();
+                auto identifier_name = identifier.as_deprecated_string();
                 // Skip types.
                 if (identifier_name[0] == '<')
                     continue;

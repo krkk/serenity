@@ -113,7 +113,7 @@ Optional<DeprecatedString> JsonObject::get_deprecated_string(StringView key) con
 {
     auto maybe_value = get(key);
     if (maybe_value.has_value() && maybe_value->is_string())
-        return maybe_value->as_string();
+        return maybe_value->as_deprecated_string();
     return {};
 }
 #endif

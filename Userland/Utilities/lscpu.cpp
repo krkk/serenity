@@ -47,7 +47,7 @@ static void print_cpu_info(JsonObject const& value)
     auto& features = value.get_array("features"sv).value();
 
     for (auto const& feature : features.values())
-        out("{} ", feature.as_string());
+        out("{} ", feature.as_deprecated_string());
 
     outln();
 }

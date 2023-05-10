@@ -79,14 +79,14 @@ public:
     DeprecatedString as_string_or(DeprecatedString const& alternative) const
     {
         if (is_string())
-            return as_string();
+            return as_deprecated_string();
         return alternative;
     }
 
     DeprecatedString to_deprecated_string() const
     {
         if (is_string())
-            return as_string();
+            return as_deprecated_string();
         return serialized<StringBuilder>();
     }
 #endif
@@ -128,7 +128,7 @@ public:
     bool as_bool() const { return get<Detail::Boolean>().value; }
 
 #ifndef KERNEL
-    DeprecatedString as_string() const
+    DeprecatedString as_deprecated_string() const
     {
         return get<DeprecatedString>();
     }

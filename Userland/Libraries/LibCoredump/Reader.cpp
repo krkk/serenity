@@ -226,7 +226,7 @@ Vector<DeprecatedString> Reader::process_arguments() const
     Vector<DeprecatedString> vector;
     arguments->for_each([&](auto& value) {
         if (value.is_string())
-            vector.append(value.as_string());
+            vector.append(value.as_deprecated_string());
     });
     return vector;
 }
@@ -240,7 +240,7 @@ Vector<DeprecatedString> Reader::process_environment() const
     Vector<DeprecatedString> vector;
     environment->for_each([&](auto& value) {
         if (value.is_string())
-            vector.append(value.as_string());
+            vector.append(value.as_deprecated_string());
     });
     return vector;
 }

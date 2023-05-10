@@ -389,7 +389,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
     // FIXME: Better error checking.
     if (columns.has_value()) {
         columns->for_each([&](auto& value) {
-            sheet->m_columns.append(value.as_string());
+            sheet->m_columns.append(value.as_deprecated_string());
             return IterationDecision::Continue;
         });
     }

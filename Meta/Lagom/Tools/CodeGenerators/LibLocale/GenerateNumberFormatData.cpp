@@ -442,7 +442,7 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
             if (split_key.size() != 3)
                 return;
 
-            auto patterns = value.as_string().split(';');
+            auto patterns = value.as_deprecated_string().split(';');
             NumberFormat format {};
 
             if (auto type = split_key[0].template to_uint<u64>(); type.has_value()) {
@@ -515,7 +515,7 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
                 if (to_underlying(*numeric_symbol) >= symbols.size())
                     symbols.resize(to_underlying(*numeric_symbol) + 1);
 
-                auto symbol_index = cldr.unique_strings.ensure(localization.as_string());
+                auto symbol_index = cldr.unique_strings.ensure(localization.as_deprecated_string());
                 symbols[to_underlying(*numeric_symbol)] = symbol_index;
             });
 
@@ -656,7 +656,7 @@ static ErrorOr<void> parse_units(DeprecatedString locale_units_path, CLDR& cldr,
                 auto plurality = unit_key.substring_view(unit_pattern_prefix.length());
                 format.plurality = Locale::plural_category_from_string(plurality);
 
-                auto zero_format = pattern_value.as_string().replace("{0}"sv, "{number}"sv, ReplaceMode::FirstOnly);
+                auto zero_format = pattern_value.as_deprecated_string().replace("{0}"sv, "{number}"sv, ReplaceMode::FirstOnly);
                 zero_format = parse_identifiers(zero_format, "unitIdentifier"sv, cldr, format);
 
                 format.positive_format_index = cldr.unique_strings.ensure(zero_format.replace("{number}"sv, "{plusSign}{number}"sv, ReplaceMode::FirstOnly));

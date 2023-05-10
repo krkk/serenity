@@ -89,11 +89,11 @@ Vector<DeprecatedString> get_name_list(Optional<JsonValue const&> name_definitio
 
     Vector<DeprecatedString, 1> names;
     if (name_definition->is_string()) {
-        names.append(name_definition->as_string());
+        names.append(name_definition->as_deprecated_string());
     } else if (name_definition->is_array()) {
         name_definition->as_array().for_each([&names](auto& value) {
             VERIFY(value.is_string());
-            names.append(value.as_string());
+            names.append(value.as_deprecated_string());
         });
     } else {
         VERIFY_NOT_REACHED();
@@ -176,7 +176,7 @@ Variants read_variants_settings(JsonObject const& variants_obj)
     if (variants_obj.has_array("argument_defaults"sv)) {
         variants.argument_defaults.clear_with_capacity();
         variants_obj.get_array("argument_defaults"sv)->for_each([&](auto const& argument_default_value) {
-            variants.argument_defaults.append(argument_default_value.as_string());
+            variants.argument_defaults.append(argument_default_value.as_deprecated_string());
         });
     }
     if (variants_obj.has_bool("convert_range"sv)) {
@@ -185,7 +185,7 @@ Variants read_variants_settings(JsonObject const& variants_obj)
     if (variants_obj.has_array("api_suffixes"sv)) {
         variants.api_suffixes.clear_with_capacity();
         variants_obj.get_array("api_suffixes"sv)->for_each([&](auto const& suffix_value) {
-            variants.api_suffixes.append(suffix_value.as_string());
+            variants.api_suffixes.append(suffix_value.as_deprecated_string());
         });
     }
     if (variants_obj.has_string("pointer_argument"sv)) {

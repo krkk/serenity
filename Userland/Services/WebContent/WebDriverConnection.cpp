@@ -240,7 +240,7 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
     if constexpr (IsSame<PropertyType, DeprecatedString>) {
         if (!property->is_string())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not a String", key));
-        return property->as_string();
+        return property->as_deprecated_string();
     } else if constexpr (IsSame<PropertyType, bool>) {
         if (!property->is_bool())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not a Boolean", key));

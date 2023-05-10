@@ -60,26 +60,26 @@ TEST_CASE(json_empty_string)
 {
     auto json = JsonValue::from_string("\"\""sv).value();
     VERIFY(json.is_string());
-    EXPECT_EQ(json.as_string().is_null(), false);
-    EXPECT_EQ(json.as_string().is_empty(), true);
+    EXPECT_EQ(json.as_deprecated_string().is_null(), false);
+    EXPECT_EQ(json.as_deprecated_string().is_empty(), true);
 }
 
 TEST_CASE(json_string)
 {
     auto json = JsonValue::from_string("\"A\""sv).value();
     VERIFY(json.is_string());
-    EXPECT_EQ(json.as_string().is_null(), false);
-    EXPECT_EQ(json.as_string().length(), size_t { 1 });
-    EXPECT_EQ(json.as_string() == "A", true);
+    EXPECT_EQ(json.as_deprecated_string().is_null(), false);
+    EXPECT_EQ(json.as_deprecated_string().length(), size_t { 1 });
+    EXPECT_EQ(json.as_deprecated_string() == "A", true);
 }
 
 TEST_CASE(json_utf8_character)
 {
     auto json = JsonValue::from_string("\"\\u0041\""sv).value();
     VERIFY(json.is_string());
-    EXPECT_EQ(json.as_string().is_null(), false);
-    EXPECT_EQ(json.as_string().length(), size_t { 1 });
-    EXPECT_EQ(json.as_string() == "A", true);
+    EXPECT_EQ(json.as_deprecated_string().is_null(), false);
+    EXPECT_EQ(json.as_deprecated_string().length(), size_t { 1 });
+    EXPECT_EQ(json.as_deprecated_string() == "A", true);
 }
 
 /*
@@ -423,7 +423,7 @@ TEST_CASE(json_array_take)
     auto array = setup_json_array();
     auto const& element = array.take(2);
     EXPECT_EQ(array.size(), size_t { 4 });
-    EXPECT_EQ(element.as_string(), "WHF");
+    EXPECT_EQ(element.as_deprecated_string(), "WHF");
 }
 
 TEST_CASE(json_array_must_append)
