@@ -73,7 +73,7 @@ public:
     template<typename Builder>
     typename Builder::OutputType serialized() const;
     template<typename Builder>
-    void serialize(Builder&) const;
+    ErrorOr<void> serialize(Builder&) const;
 
 #ifndef KERNEL
     DeprecatedString as_string_or(DeprecatedString const& alternative) const

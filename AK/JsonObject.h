@@ -112,7 +112,7 @@ public:
     typename Builder::OutputType serialized() const;
 
     template<typename Builder>
-    void serialize(Builder&) const;
+    ErrorOr<void> serialize(Builder&) const;
 
     [[nodiscard]] DeprecatedString to_deprecated_string() const;
 
@@ -121,49 +121,50 @@ private:
 };
 
 template<typename Builder>
-inline void JsonObject::serialize(Builder& builder) const
+inline ErrorOr<void> JsonObject::serialize(Builder& builder) const
 {
-    auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
-    for_each_member([&](auto& key, auto& value) {
-        MUST(serializer.add(key, value));
-    });
-    MUST(serializer.finish());
+    auto serializer = TRY(JsonObjectSerializer<>::try_create(builder));
+    TRY(try_for_each_member([&](auto& key, auto& value) {
+        return serializer.add(key, value);
+    }));
+    return serializer.finish();
 }
 
 template<typename Builder>
 inline typename Builder::OutputType JsonObject::serialized() const
 {
     Builder builder;
-    serialize(builder);
+    serialize(builder).release_value_but_fixme_should_propagate_errors();
     return builder.to_deprecated_string();
 }
 
 template<typename Builder>
-inline void JsonValue::serialize(Builder& builder) const
+inline ErrorOr<void> JsonValue::serialize(Builder& builder) const
 {
-    visit(
+    return visit(
 #if !defined(KERNEL)
-        [&](DeprecatedString const& v) {
-            builder.append('\"');
-            builder.append_escaped_for_json(v);
-            builder.append('\"');
+        [&](DeprecatedString const& v) -> ErrorOr<void> {
+            TRY(builder.try_append('\"'));
+            TRY(builder.try_append_escaped_for_json(v));
+            TRY(builder.try_append('\"'));
+            return {};
         },
 #endif
-        [&](JsonArray* v) { v->serialize(builder); },
-        [&](JsonObject* v) { v->serialize(builder); },
-        [&](Detail::Boolean v) { builder.append(v.value ? "true"sv : "false"sv); },
+        [&](JsonArray* v) { return v->serialize(builder); },
+        [&](JsonObject* v) { return v->serialize(builder); },
+        [&](Detail::Boolean v) { return builder.try_append(v.value ? "true"sv : "false"sv); },
 #if !defined(KERNEL)
-        [&](double v) { builder.appendff("{}", v); },
+        [&](double v) { return builder.try_appendff("{}", v); },
 #endif
-        [&](Integral auto v) { builder.appendff("{}", v); },
-        [&](Empty) { builder.append("null"sv); });
+        [&](Integral auto v) { return builder.try_appendff("{}", v); },
+        [&](Empty) { return builder.try_append("null"sv); });
 }
 
 template<typename Builder>
 inline typename Builder::OutputType JsonValue::serialized() const
 {
     Builder builder;
-    serialize(builder);
+    serialize(builder).release_value_but_fixme_should_propagate_errors();
     return builder.to_deprecated_string();
 }
 

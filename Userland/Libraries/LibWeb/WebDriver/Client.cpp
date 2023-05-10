@@ -327,7 +327,7 @@ ErrorOr<void, Client::WrappedError> Client::send_error_response(Error const& err
         result.set("data", *error.data);
 
     StringBuilder content_builder;
-    result.serialize(content_builder);
+    TRY(result.serialize(content_builder));
 
     StringBuilder header_builder;
     header_builder.appendff("HTTP/1.0 {} {}\r\n", error.http_status, reason);

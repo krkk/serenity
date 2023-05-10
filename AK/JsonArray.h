@@ -71,7 +71,7 @@ public:
     typename Builder::OutputType serialized() const;
 
     template<typename Builder>
-    void serialize(Builder&) const;
+    ErrorOr<void> serialize(Builder&) const;
 
     [[nodiscard]] DeprecatedString to_deprecated_string() const { return serialized<StringBuilder>(); }
 
@@ -99,18 +99,19 @@ private:
 };
 
 template<typename Builder>
-inline void JsonArray::serialize(Builder& builder) const
+inline ErrorOr<void> JsonArray::serialize(Builder& builder) const
 {
-    auto serializer = MUST(JsonArraySerializer<>::try_create(builder));
-    for_each([&](auto& value) { MUST(serializer.add(value)); });
-    MUST(serializer.finish());
+    auto serializer = TRY(JsonArraySerializer<>::try_create(builder));
+    TRY(try_for_each([&](auto& value) { return serializer.add(value); }));
+    TRY(serializer.finish());
+    return {};
 }
 
 template<typename Builder>
 inline typename Builder::OutputType JsonArray::serialized() const
 {
     Builder builder;
-    serialize(builder);
+    serialize(builder).release_value_but_fixme_should_propagate_errors();
     return builder.to_deprecated_string();
 }
 

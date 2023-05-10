@@ -47,7 +47,7 @@ public:
     ErrorOr<void> add(JsonValue const& value)
     {
         TRY(begin_item());
-        value.serialize(m_builder);
+        TRY(value.serialize(m_builder));
         return {};
     }
 #endif

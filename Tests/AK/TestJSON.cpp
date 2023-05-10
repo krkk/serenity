@@ -492,7 +492,7 @@ TEST_CASE(json_array_serialize)
     auto json_value = MUST(JsonValue::from_string(raw_json));
     auto array = json_value.as_array();
     StringBuilder builder {};
-    array.serialize(builder);
+    TRY_OR_FAIL(array.serialize(builder));
     EXPECT_EQ(builder.to_deprecated_string(), raw_json);
 }
 

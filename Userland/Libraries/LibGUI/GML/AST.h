@@ -136,11 +136,11 @@ public:
                 if (!first)
                     builder.append(", "sv);
                 first = false;
-                value.serialize(builder);
+                value.serialize(builder).release_value_but_fixme_should_propagate_errors();
             });
             builder.append(']');
         } else {
-            serialize(builder);
+            serialize(builder).release_value_but_fixme_should_propagate_errors();
         }
         if (!is_inline)
             builder.append('\n');

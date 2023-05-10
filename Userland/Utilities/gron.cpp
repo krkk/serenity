@@ -114,5 +114,5 @@ static void print(StringView name, JsonValue const& value, Vector<DeprecatedStri
             out("{}", color_index);
         });
 
-    outln("{}{};", value.serialized<StringBuilder>(), color_off);
+    outln("{}{};", value.serialized().release_value_but_fixme_should_propagate_errors(), color_off);
 }

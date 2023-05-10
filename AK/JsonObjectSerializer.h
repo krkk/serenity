@@ -42,7 +42,7 @@ public:
     ErrorOr<void> add(StringView key, JsonValue const& value)
     {
         TRY(begin_item(key));
-        value.serialize(m_builder);
+        TRY(value.serialize(m_builder));
         return {};
     }
 #endif
