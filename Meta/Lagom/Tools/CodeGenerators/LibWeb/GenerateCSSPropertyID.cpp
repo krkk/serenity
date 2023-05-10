@@ -464,7 +464,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                 if (!valid_types.is_empty()) {
                     for (auto& type : valid_types.values()) {
                         VERIFY(type.is_string());
-                        auto type_parts = type.as_deprecated_string().split_view(' ');
+                        auto type_parts = type.as_string().bytes_as_string_view().split_view(' ');
                         auto type_name = type_parts.first();
                         auto type_args = type_parts.size() > 1 ? type_parts[1] : ""sv;
                         StringView min_value;

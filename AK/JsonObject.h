@@ -135,7 +135,7 @@ inline ErrorOr<void> JsonValue::serialize(Builder& builder) const
 {
     return visit(
 #if !defined(KERNEL)
-        [&](DeprecatedString const& v) -> ErrorOr<void> {
+        [&](String const& v) -> ErrorOr<void> {
             TRY(builder.try_append('\"'));
             TRY(builder.try_append_escaped_for_json(v));
             TRY(builder.try_append('\"'));

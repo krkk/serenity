@@ -89,11 +89,11 @@ ErrorOr<JsonValue> JsonValue::from_string(StringView input)
 }
 #endif
 
-DeprecatedString JsonValue::serialized() const
+ErrorOr<String> JsonValue::serialized() const
 {
     StringBuilder builder;
-    serialize(builder).release_value_but_fixme_should_propagate_errors();
-    return builder.to_deprecated_string();
+    TRY(serialize(builder));
+    return builder.to_string();
 }
 
 }

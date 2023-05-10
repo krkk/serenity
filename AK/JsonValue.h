@@ -12,7 +12,7 @@
 #include <AK/Variant.h>
 
 #ifndef KERNEL
-#    include <AK/DeprecatedString.h>
+#    include <AK/String.h>
 #endif
 
 namespace AK {
@@ -23,7 +23,7 @@ struct Boolean {
 };
 
 #ifndef KERNEL
-using JsonValueUnderlyingType = AK::Variant<Empty, i32, u32, i64, u64, double, Boolean, DeprecatedString, JsonArray*, JsonObject*>;
+using JsonValueUnderlyingType = AK::Variant<Empty, i32, u32, i64, u64, double, Boolean, String, JsonArray*, JsonObject*>;
 #else
 using JsonValueUnderlyingType = AK::Variant<Empty, i32, u32, i64, u64, Boolean, JsonArray*, JsonObject*>;
 #endif
@@ -48,7 +48,7 @@ public:
     template<typename T>
     JsonValue(T&& value)
     requires(IsConstructible<DeprecatedString, T>)
-        : JsonValue(DeprecatedString(forward<T>(value)))
+        : JsonValue(String::from_deprecated_string(forward<T>(value)).release_value_but_fixme_should_propagate_errors())
     {
     }
 #endif
@@ -70,24 +70,31 @@ public:
     JsonValue& operator=(JsonArray&&) = delete;
     JsonValue& operator=(JsonObject&&) = delete;
 
-    DeprecatedString serialized() const;
+    ErrorOr<String> serialized() const;
     template<typename Builder>
     ErrorOr<void> serialize(Builder&) const;
 
 #ifndef KERNEL
-    DeprecatedString as_deprecated_string_or(DeprecatedString const& alternative) const
+    String as_string_or(String const& alternative) const
     {
         if (is_string())
-            return as_deprecated_string();
+            return as_string();
         return alternative;
     }
 
-    DeprecatedString to_deprecated_string() const
+    ErrorOr<String> to_string() const
     {
         if (is_string())
-            return as_deprecated_string();
+            return as_string();
         return serialized();
     }
+
+    DeprecatedString as_deprecated_string_or(DeprecatedString const& alternative) const
+    {
+        return as_string_or(MUST(String::from_deprecated_string(alternative))).to_deprecated_string();
+    }
+    DeprecatedString to_deprecated_string() const { return MUST(to_string()).to_deprecated_string(); }
+    DeprecatedString as_deprecated_string() const { return as_string().to_deprecated_string(); }
 #endif
 
     int to_int(int default_value = 0) const
@@ -127,9 +134,9 @@ public:
     bool as_bool() const { return get<Detail::Boolean>().value; }
 
 #ifndef KERNEL
-    DeprecatedString as_deprecated_string() const
+    String as_string() const
     {
-        return get<DeprecatedString>();
+        return get<String>();
     }
 #endif
 
@@ -155,7 +162,7 @@ public:
 #ifndef KERNEL
     bool is_string() const
     {
-        return has<DeprecatedString>();
+        return has<String>();
     }
 #endif
     bool is_i32() const
@@ -242,7 +249,6 @@ struct Formatter<JsonValue> : Formatter<StringView> {
     }
 };
 #endif
-
 }
 
 #if USING_AK_GLOBALLY
