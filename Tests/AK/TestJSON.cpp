@@ -59,7 +59,7 @@ TEST_CASE(load_form)
 TEST_CASE(json_empty_string)
 {
     auto json = JsonValue::from_string("\"\""sv).value();
-    EXPECT_EQ(json.type(), JsonValue::Type::String);
+    VERIFY(json.is_string());
     EXPECT_EQ(json.as_string().is_null(), false);
     EXPECT_EQ(json.as_string().is_empty(), true);
 }
@@ -67,7 +67,7 @@ TEST_CASE(json_empty_string)
 TEST_CASE(json_string)
 {
     auto json = JsonValue::from_string("\"A\""sv).value();
-    EXPECT_EQ(json.type(), JsonValue::Type::String);
+    VERIFY(json.is_string());
     EXPECT_EQ(json.as_string().is_null(), false);
     EXPECT_EQ(json.as_string().length(), size_t { 1 });
     EXPECT_EQ(json.as_string() == "A", true);
@@ -76,7 +76,7 @@ TEST_CASE(json_string)
 TEST_CASE(json_utf8_character)
 {
     auto json = JsonValue::from_string("\"\\u0041\""sv).value();
-    EXPECT_EQ(json.type(), JsonValue::Type::String);
+    VERIFY(json.is_string());
     EXPECT_EQ(json.as_string().is_null(), false);
     EXPECT_EQ(json.as_string().length(), size_t { 1 });
     EXPECT_EQ(json.as_string() == "A", true);
@@ -91,7 +91,7 @@ TEST_CASE(json_utf8_multibyte)
     EXPECT_EQ(json_or_error.is_error(), false);
 
     auto& json = json_or_error.value();
-    EXPECT_EQ(json.type(), JsonValue::Type::String);
+    VERIFY(json.is_string());
     EXPECT_EQ(json.as_string().is_null(), false);
     EXPECT_EQ(json.as_string().length(), size_t { 2 });
     EXPECT_EQ(json.as_string() == "š", true);

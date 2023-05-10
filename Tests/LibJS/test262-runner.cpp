@@ -784,7 +784,7 @@ int main(int argc, char** argv)
                 if (!first_output.contains("Test262:AsyncTestComplete"sv) || first_output.contains("Test262:AsyncTestFailure"sv)) {
                     result_object.set("async_fail", true);
                     if (first_output.is_null())
-                        result_object.set("output", JsonValue { AK::JsonValue::Type::Null });
+                        result_object.set("output", JsonValue());
 
                     passed = false;
                 }
@@ -807,7 +807,7 @@ int main(int argc, char** argv)
                 if (!first_output.contains("Test262:AsyncTestComplete"sv) || first_output.contains("Test262:AsyncTestFailure"sv)) {
                     result_object.set("async_fail", true);
                     if (first_output.is_null())
-                        result_object.set("output", JsonValue { AK::JsonValue::Type::Null });
+                        result_object.set("output", JsonValue());
 
                     passed = false;
                 }

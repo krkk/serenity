@@ -141,10 +141,10 @@ static void emit_signpost(DeprecatedString const& message, int id)
 static void store_response_cookies(Page& page, AK::URL const& url, DeprecatedString const& cookies)
 {
     auto set_cookie_json_value = MUST(JsonValue::from_string(cookies));
-    VERIFY(set_cookie_json_value.type() == JsonValue::Type::Array);
+    VERIFY(set_cookie_json_value.is_array());
 
     for (auto const& set_cookie_entry : set_cookie_json_value.as_array().values()) {
-        VERIFY(set_cookie_entry.type() == JsonValue::Type::String);
+        VERIFY(set_cookie_entry.is_string());
 
         auto cookie = Cookie::parse_cookie(set_cookie_entry.as_string());
         if (!cookie.has_value())
