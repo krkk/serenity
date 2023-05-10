@@ -482,7 +482,7 @@ TEST_CASE(json_array_serialized)
     auto raw_json = R"(["Hello",2,3.14,4,"World"])"sv;
     auto json_value = MUST(JsonValue::from_string(raw_json));
     auto array = json_value.as_array();
-    auto const& serialized_json = array.serialized<StringBuilder>();
+    auto const& serialized_json = array.to_deprecated_string();
     EXPECT_EQ(serialized_json, raw_json);
 }
 

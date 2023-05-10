@@ -284,7 +284,7 @@ ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue resu
         keep_alive = it->value.trim_whitespace().equals_ignoring_ascii_case("keep-alive"sv);
 
     result = make_success_response(move(result));
-    auto content = result.serialized<StringBuilder>();
+    auto content = TRY(result.serialized());
 
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n"sv);

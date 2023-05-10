@@ -68,12 +68,14 @@ public:
     void set(size_t index, JsonValue value) { m_values.at(index) = move(value); }
 
     template<typename Builder>
-    typename Builder::OutputType serialized() const;
-
-    template<typename Builder>
     ErrorOr<void> serialize(Builder&) const;
 
-    [[nodiscard]] DeprecatedString to_deprecated_string() const { return serialized<StringBuilder>(); }
+    [[nodiscard]] DeprecatedString to_deprecated_string() const
+    {
+        StringBuilder builder;
+        serialize(builder).release_value_but_fixme_should_propagate_errors();
+        return builder.to_deprecated_string();
+    }
 
     template<typename Callback>
     void for_each(Callback callback) const
@@ -105,14 +107,6 @@ inline ErrorOr<void> JsonArray::serialize(Builder& builder) const
     TRY(try_for_each([&](auto& value) { return serializer.add(value); }));
     TRY(serializer.finish());
     return {};
-}
-
-template<typename Builder>
-inline typename Builder::OutputType JsonArray::serialized() const
-{
-    Builder builder;
-    serialize(builder).release_value_but_fixme_should_propagate_errors();
-    return builder.to_deprecated_string();
 }
 
 }

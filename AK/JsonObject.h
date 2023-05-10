@@ -131,14 +131,6 @@ inline ErrorOr<void> JsonObject::serialize(Builder& builder) const
 }
 
 template<typename Builder>
-inline typename Builder::OutputType JsonObject::serialized() const
-{
-    Builder builder;
-    serialize(builder).release_value_but_fixme_should_propagate_errors();
-    return builder.to_deprecated_string();
-}
-
-template<typename Builder>
 inline ErrorOr<void> JsonValue::serialize(Builder& builder) const
 {
     return visit(
@@ -158,14 +150,6 @@ inline ErrorOr<void> JsonValue::serialize(Builder& builder) const
 #endif
         [&](Integral auto v) { return builder.try_appendff("{}", v); },
         [&](Empty) { return builder.try_append("null"sv); });
-}
-
-template<typename Builder>
-inline typename Builder::OutputType JsonValue::serialized() const
-{
-    Builder builder;
-    serialize(builder).release_value_but_fixme_should_propagate_errors();
-    return builder.to_deprecated_string();
 }
 
 }

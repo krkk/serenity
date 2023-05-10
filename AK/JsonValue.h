@@ -70,8 +70,7 @@ public:
     JsonValue& operator=(JsonArray&&) = delete;
     JsonValue& operator=(JsonObject&&) = delete;
 
-    template<typename Builder>
-    typename Builder::OutputType serialized() const;
+    DeprecatedString serialized() const;
     template<typename Builder>
     ErrorOr<void> serialize(Builder&) const;
 
@@ -87,7 +86,7 @@ public:
     {
         if (is_string())
             return as_deprecated_string();
-        return serialized<StringBuilder>();
+        return serialized();
     }
 #endif
 

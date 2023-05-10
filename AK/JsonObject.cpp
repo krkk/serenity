@@ -261,7 +261,9 @@ bool JsonObject::remove(StringView key)
 
 DeprecatedString JsonObject::to_deprecated_string() const
 {
-    return serialized<StringBuilder>();
+    StringBuilder builder;
+    serialize(builder).release_value_but_fixme_should_propagate_errors();
+    return builder.to_deprecated_string();
 }
 
 }
