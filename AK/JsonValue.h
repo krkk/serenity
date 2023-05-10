@@ -297,8 +297,6 @@ public:
         }
     }
 
-    bool equals(JsonValue const& other) const;
-
 private:
     void clear();
     void copy_from(JsonValue const&);

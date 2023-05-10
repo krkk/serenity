@@ -71,50 +71,6 @@ JsonValue& JsonValue::operator=(JsonValue&& other)
     return *this;
 }
 
-bool JsonValue::equals(JsonValue const& other) const
-{
-    if (is_null() && other.is_null())
-        return true;
-
-    if (is_bool() && other.is_bool() && as_bool() == other.as_bool())
-        return true;
-
-    if (is_string() && other.is_string() && as_string() == other.as_string())
-        return true;
-
-#if !defined(KERNEL)
-    if (is_number() && other.is_number() && to_number<double>() == other.to_number<double>()) {
-        return true;
-    }
-#else
-    if (is_number() && other.is_number() && to_number<i64>() == other.to_number<i64>()) {
-        return true;
-    }
-#endif
-
-    if (is_array() && other.is_array() && as_array().size() == other.as_array().size()) {
-        bool result = true;
-        for (size_t i = 0; i < as_array().size(); ++i) {
-            result &= as_array().at(i).equals(other.as_array().at(i));
-        }
-        return result;
-    }
-
-    if (is_object() && other.is_object() && as_object().size() == other.as_object().size()) {
-        bool result = true;
-        as_object().for_each_member([&](auto& key, auto& value) {
-            auto other_value = other.as_object().get(key);
-            if (other_value.has_value())
-                result &= value.equals(*other_value);
-            else
-                result = false;
-        });
-        return result;
-    }
-
-    return false;
-}
-
 JsonValue::JsonValue(int value)
     : m_type(Type::Int32)
 {
