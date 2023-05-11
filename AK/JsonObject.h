@@ -116,6 +116,7 @@ public:
     ErrorOr<void> serialize(Builder&) const;
 
     [[nodiscard]] DeprecatedString to_deprecated_string() const;
+    [[nodiscard]] ErrorOr<String> to_string() const;
 
 private:
     OrderedHashMap<DeprecatedString, JsonValue> m_members;

@@ -77,6 +77,13 @@ public:
         return builder.to_deprecated_string();
     }
 
+    [[nodiscard]] ErrorOr<String> to_string() const
+    {
+        StringBuilder builder;
+        TRY(serialize(builder));
+        return builder.to_string();
+    }
+
     template<typename Callback>
     void for_each(Callback callback) const
     {
