@@ -232,7 +232,7 @@ ErrorOr<void> ClipboardHistoryModel::write_to_file(bool rewrite_all)
     auto const write_element = [](Core::File& file, ClipboardItem const& item) -> ErrorOr<void> {
         if (!item.data_and_type.mime_type.starts_with("text/"sv))
             return {};
-        TRY(file.write_until_depleted(TRY(item.to_json()).to_deprecated_string().bytes()));
+        TRY(file.write_until_depleted(TRY(TRY(item.to_json()).to_string()).bytes()));
         TRY(file.write_until_depleted("\n"sv.bytes()));
         return {};
     };

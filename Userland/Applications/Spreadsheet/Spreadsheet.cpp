@@ -737,7 +737,7 @@ DeprecatedString Sheet::generate_inline_documentation_for(StringView function, s
             builder.append('<');
         else if (i >= argc)
             builder.append('[');
-        builder.append(argnames[i].to_deprecated_string());
+        builder.append(argnames[i].to_string().release_value_but_fixme_should_propagate_errors());
         if (i == argument_index)
             builder.append('>');
         else if (i >= argc)

@@ -94,7 +94,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::create_from_pixel_paint_json(JsonObject con
         auto bitmap = TRY(decode_bitmap(bitmap_data));
         auto layer = TRY(Layer::create_with_bitmap(*image, move(bitmap), name));
 
-        if (auto const& mask_object = layer_object.get_deprecated_string("mask"sv); mask_object.has_value()) {
+        if (auto const& mask_object = layer_object.get_string("mask"sv); mask_object.has_value()) {
             auto mask_base64_encoded = mask_object.value();
             auto mask_data = TRY(decode_base64(mask_base64_encoded));
             auto mask = TRY(decode_bitmap(mask_data));

@@ -204,7 +204,7 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, 
         for (auto& sheet : workbook.sheets())
             array.must_append(sheet->to_json());
 
-        auto file_content = array.to_deprecated_string();
+        auto file_content = TRY(array.to_string());
         return file.write_until_depleted(file_content.bytes());
     };
 

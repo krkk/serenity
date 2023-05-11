@@ -1352,7 +1352,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             if (!value.is_object())
                 return;
             auto& json_object = value.as_object();
-            auto orientation_value = json_object.get_deprecated_string("orientation"sv);
+            auto orientation_value = json_object.get_string("orientation"sv);
             if (!orientation_value.has_value())
                 return;
 

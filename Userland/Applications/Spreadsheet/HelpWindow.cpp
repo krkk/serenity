@@ -144,12 +144,12 @@ DeprecatedString HelpWindow::render(StringView key)
     VERIFY(m_docs.has_object(key));
     auto& doc = m_docs.get_object(key).value();
 
-    auto name = doc.get_deprecated_string("name"sv).value_or({});
+    auto name = doc.get_string("name"sv).value_or({});
     auto argc = doc.get_u32("argc"sv).value_or(0);
     VERIFY(doc.has_array("argnames"sv));
     auto& argnames = doc.get_array("argnames"sv).value();
 
-    auto docstring = doc.get_deprecated_string("doc"sv).value_or({});
+    auto docstring = doc.get_string("doc"sv).value_or({});
 
     StringBuilder markdown_builder;
 
@@ -164,7 +164,7 @@ DeprecatedString HelpWindow::render(StringView key)
         markdown_builder.append("No required arguments.\n"sv);
 
     for (size_t i = 0; i < argc; ++i)
-        markdown_builder.appendff("- `{}`\n", argnames.at(i).to_deprecated_string());
+        markdown_builder.appendff("- `{}`\n", argnames.at(i).to_string().release_value_but_fixme_should_propagate_errors());
 
     if (argc > 0)
         markdown_builder.append("\n"sv);
@@ -173,7 +173,7 @@ DeprecatedString HelpWindow::render(StringView key)
         auto opt_count = argnames.size() - argc;
         markdown_builder.appendff("{} optional argument(s):\n", opt_count);
         for (size_t i = argc; i < (size_t)argnames.size(); ++i)
-            markdown_builder.appendff("- `{}`\n", argnames.at(i).to_deprecated_string());
+            markdown_builder.appendff("- `{}`\n", argnames.at(i).to_string().release_value_but_fixme_should_propagate_errors());
         markdown_builder.append("\n"sv);
     }
 
