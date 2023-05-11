@@ -79,6 +79,7 @@ public:
 
 #if !defined(KERNEL)
     Optional<DeprecatedString> get_deprecated_string(StringView key) const;
+    Optional<String> get_string(StringView key) const;
 #endif
 
     Optional<JsonObject const&> get_object(StringView key) const;

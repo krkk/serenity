@@ -116,6 +116,14 @@ Optional<DeprecatedString> JsonObject::get_deprecated_string(StringView key) con
         return maybe_value->as_deprecated_string();
     return {};
 }
+
+Optional<String> JsonObject::get_string(StringView key) const
+{
+    auto maybe_value = get(key);
+    if (maybe_value.has_value() && maybe_value->is_string())
+        return maybe_value->as_string();
+    return {};
+}
 #endif
 
 Optional<JsonObject const&> JsonObject::get_object(StringView key) const
