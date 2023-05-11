@@ -51,6 +51,7 @@ public:
         : JsonValue(String::from_deprecated_string(forward<T>(value)).release_value_but_fixme_should_propagate_errors())
     {
     }
+    JsonValue(char const*) = delete;
 #endif
 
     template<typename T>

@@ -768,8 +768,8 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, ReadonlySpan<
         object.set("completion", DeprecatedString::formatted(StringView { format, strlen(format) }, args...));
         object.set("static_offset", 0);
         object.set("invariant_offset", has_invariant ? option_to_complete.length() : 0u);
-        object.set("display_trivia", option.help_string);
-        object.set("trailing_trivia", option.argument_mode == OptionArgumentMode::Required ? " " : "");
+        object.set("display_trivia", String::from_utf8({ option.help_string, strlen(option.help_string) }).release_value_but_fixme_should_propagate_errors());
+        object.set("trailing_trivia", option.argument_mode == OptionArgumentMode::Required ? " "_short_string : ""_short_string);
         outln(file, "{}", object.to_deprecated_string());
     };
 

@@ -110,9 +110,9 @@ TEST_CASE(json_64_bit_value)
 TEST_CASE(json_duplicate_keys)
 {
     JsonObject json;
-    json.set("test", "foo");
-    json.set("test", "bar");
-    json.set("test", "baz");
+    json.set("test", "foo"_short_string);
+    json.set("test", "bar"_short_string);
+    json.set("test", "baz"_short_string);
     EXPECT_EQ(json.to_deprecated_string(), "{\"test\":\"baz\"}");
 }
 

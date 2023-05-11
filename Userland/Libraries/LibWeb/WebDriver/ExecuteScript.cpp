@@ -315,8 +315,8 @@ ExecuteScriptResultSerialized execute_script(Web::Page& page, DeprecatedString c
     auto json_value_or_error = json_clone(realm, result.value);
     if (json_value_or_error.is_error()) {
         auto error_object = JsonObject {};
-        error_object.set("name", "Error");
-        error_object.set("message", "Could not clone result value");
+        error_object.set("name", "Error"_short_string);
+        error_object.set("message", "Could not clone result value"_string.release_value_but_fixme_should_propagate_errors());
         return { ExecuteScriptResultType::JavaScriptError, move(error_object) };
     }
     return { result.type, json_value_or_error.release_value() };
@@ -405,8 +405,8 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
     auto json_value_or_error = json_clone(realm, result.value);
     if (json_value_or_error.is_error()) {
         auto error_object = JsonObject {};
-        error_object.set("name", "Error");
-        error_object.set("message", "Could not clone result value");
+        error_object.set("name", "Error"_short_string);
+        error_object.set("message", "Could not clone result value"_string.release_value_but_fixme_should_propagate_errors());
         return { ExecuteScriptResultType::JavaScriptError, move(error_object) };
     }
     return { result.type, json_value_or_error.release_value() };

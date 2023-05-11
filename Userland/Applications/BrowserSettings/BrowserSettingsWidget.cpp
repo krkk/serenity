@@ -108,8 +108,8 @@ ErrorOr<void> BrowserSettingsWidget::setup()
     auto search_engines_model = GUI::JsonArrayModel::create(DeprecatedString::formatted("{}/SearchEngines.json", Core::StandardPaths::config_directory()), move(search_engine_fields));
     search_engines_model->invalidate();
     Vector<JsonValue> custom_search_engine;
-    custom_search_engine.append("Custom...");
-    custom_search_engine.append("");
+    custom_search_engine.append(TRY("Custom..."_string));
+    custom_search_engine.append(""_short_string);
     TRY(search_engines_model->add(move(custom_search_engine)));
 
     m_search_engine_combobox->set_model(move(search_engines_model));

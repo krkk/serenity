@@ -242,7 +242,7 @@ static JsonValue match_capabilities(JsonObject const& capabilities)
     matched_capabilities.set("browserName"sv, browser_name);
     // "browserVersion"
     //     The user agent version, as a string.
-    matched_capabilities.set("browserVersion"sv, BROWSER_VERSION);
+    matched_capabilities.set("browserVersion"sv, String::from_utf8({ BROWSER_VERSION, strlen(BROWSER_VERSION) }).release_value_but_fixme_should_propagate_errors());
     // "platformName"
     //     ASCII Lowercase name of the current platform as a string.
     matched_capabilities.set("platformName"sv, platform_name);

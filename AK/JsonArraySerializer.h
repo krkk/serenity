@@ -99,21 +99,6 @@ public:
     }
 #endif
 
-    ErrorOr<void> add(char const* value)
-    {
-        TRY(begin_item());
-        if constexpr (IsLegacyBuilder<Builder>) {
-            TRY(m_builder.try_append('"'));
-            TRY(m_builder.try_append_escaped_for_json(value));
-            TRY(m_builder.try_append('"'));
-        } else {
-            TRY(m_builder.append('"'));
-            TRY(m_builder.append_escaped_for_json(value));
-            TRY(m_builder.append('"'));
-        }
-        return {};
-    }
-
     ErrorOr<void> add(bool value)
     {
         TRY(begin_item());

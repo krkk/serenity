@@ -79,7 +79,7 @@ Widget::Widget()
     REGISTER_STRING_PROPERTY("title", title, set_title);
 
     register_property(
-        "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
+        "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth"_string.release_value_but_fixme_should_propagate_errors() : "Normal"_short_string; },
         [this](auto& value) {
             if (value.to_deprecated_string() == "FixedWidth") {
                 set_font_fixed_width(true);
@@ -96,13 +96,13 @@ Widget::Widget()
         "focus_policy", [this]() -> JsonValue {
         auto policy = focus_policy();
         if (policy == GUI::FocusPolicy::ClickFocus)
-            return "ClickFocus";
+            return "ClickFocus"_string.release_value_but_fixme_should_propagate_errors();
         if (policy == GUI::FocusPolicy::NoFocus)
-            return "NoFocus";
+            return "NoFocus"_short_string;
         if (policy == GUI::FocusPolicy::TabFocus)
-            return "TabFocus";
+            return "TabFocus"_string.release_value_but_fixme_should_propagate_errors();
         if (policy == GUI::FocusPolicy::StrongFocus)
-            return "StrongFocus";
+            return "StrongFocus"_string.release_value_but_fixme_should_propagate_errors();
         return JsonValue(); },
         [this](auto& value) {
             if (!value.is_string())

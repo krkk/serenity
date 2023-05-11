@@ -555,7 +555,7 @@ JsonObject Sheet::to_json() const
         auto key = builder.to_deprecated_string();
 
         JsonObject data;
-        data.set("kind", it.value->kind() == Cell::Kind::Formula ? "Formula" : "LiteralString");
+        data.set("kind", it.value->kind() == Cell::Kind::Formula ? "Formula"_string.release_value_but_fixme_should_propagate_errors() : "LiteralString"_string.release_value_but_fixme_should_propagate_errors());
         if (it.value->kind() == Cell::Formula) {
             auto& vm = interpreter().vm();
             data.set("source", it.value->data());

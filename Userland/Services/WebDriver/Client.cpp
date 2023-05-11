@@ -205,7 +205,7 @@ Web::WebDriver::Response Client::get_status(Web::WebDriver::Parameters, JsonValu
     // FIXME: Report if we are somehow not ready.
     JsonObject body;
     body.set("ready", true);
-    body.set("message", "Ready to start some sessions!");
+    body.set("message", "Ready to start some sessions!"_string.release_value_but_fixme_should_propagate_errors());
 
     // 2. Return success with data body.
     return JsonValue { body };

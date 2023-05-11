@@ -295,7 +295,7 @@ ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue resu
     if (keep_alive)
         builder.append("Connection: keep-alive\r\n"sv);
     builder.append("Content-Type: application/json; charset=utf-8\r\n"sv);
-    builder.appendff("Content-Length: {}\r\n", content.length());
+    builder.appendff("Content-Length: {}\r\n", content.bytes_as_string_view().length());
     builder.append("\r\n"sv);
 
     auto builder_contents = TRY(builder.to_byte_buffer());
@@ -303,7 +303,7 @@ ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue resu
 
     while (!content.is_empty()) {
         auto bytes_sent = TRY(m_socket->write_some(content.bytes()));
-        content = content.substring_view(bytes_sent);
+        content = TRY(content.substring_from_byte_offset(bytes_sent));
     }
 
     if (!keep_alive)
@@ -322,7 +322,7 @@ ErrorOr<void, Client::WrappedError> Client::send_error_response(Error const& err
     JsonObject result;
     result.set("error", error.error);
     result.set("message", error.message);
-    result.set("stacktrace", "");
+    result.set("stacktrace", String {});
     if (error.data.has_value())
         result.set("data", *error.data);
 

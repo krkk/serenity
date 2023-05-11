@@ -22,7 +22,11 @@ BoxLayout::BoxLayout(Orientation orientation, Margins margins, int spacing)
     , m_orientation(orientation)
 {
     register_property(
-        "orientation", [this] { return m_orientation == Gfx::Orientation::Vertical ? "Vertical" : "Horizontal"; }, nullptr);
+        "orientation",
+        [this] {
+            return m_orientation == Gfx::Orientation::Vertical ? "Vertical"_string.release_value_but_fixme_should_propagate_errors() : "Horizontal"_string.release_value_but_fixme_should_propagate_errors();
+        },
+        nullptr);
 }
 
 UISize BoxLayout::preferred_size() const

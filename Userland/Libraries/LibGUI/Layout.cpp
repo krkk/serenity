@@ -27,10 +27,10 @@ Layout::Layout(Margins initial_margins, int spacing)
             for (auto& entry : m_entries) {
                 JsonObject entry_object;
                 if (entry.type == Entry::Type::Widget) {
-                    entry_object.set("type", "Widget");
+                    entry_object.set("type", "Widget"_short_string);
                     entry_object.set("widget", (FlatPtr)entry.widget.ptr());
                 } else if (entry.type == Entry::Type::Spacer) {
-                    entry_object.set("type", "Spacer");
+                    entry_object.set("type", "Spacer"_short_string);
                 } else {
                     VERIFY_NOT_REACHED();
                 }

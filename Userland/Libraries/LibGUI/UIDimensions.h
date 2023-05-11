@@ -137,13 +137,13 @@ public:
         if (is_int())
             return m_value;
         if (is_shrink())
-            return "shrink";
+            return "shrink"_short_string;
         if (is_grow())
-            return "grow";
+            return "grow"_short_string;
         if (is_opportunistic_grow())
-            return "opportunistic_grow";
+            return "opportunistic_grow"_string.release_value_but_fixme_should_propagate_errors();
         if (is_fit())
-            return "fit";
+            return "fit"_short_string;
 
         VERIFY_NOT_REACHED();
     }
