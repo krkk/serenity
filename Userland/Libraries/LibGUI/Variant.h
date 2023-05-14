@@ -129,7 +129,7 @@ public:
     Gfx::IntPoint as_point() const { return get<Gfx::IntPoint>(); }
     Gfx::IntSize as_size() const { return get<Gfx::IntSize>(); }
     Gfx::IntRect as_rect() const { return get<Gfx::IntRect>(); }
-    DeprecatedString as_string() const { return get<String>().to_deprecated_string(); }
+    String as_string() const { return get<String>(); }
     Gfx::Bitmap const& as_bitmap() const { return *get<NonnullRefPtr<Gfx::Bitmap const>>(); }
     GUI::Icon as_icon() const { return get<GUI::Icon>(); }
     Color as_color() const { return get<Color>(); }

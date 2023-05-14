@@ -75,7 +75,7 @@ public:
         auto percentage = index.data(GUI::ModelRole::Custom).to_i32();
 
         auto data = index.data();
-        DeprecatedString text;
+        String text;
         if (data.is_string())
             text = data.as_string();
         Gfx::StylePainter::paint_progressbar(painter, rect, palette, 0, 100, percentage, text);

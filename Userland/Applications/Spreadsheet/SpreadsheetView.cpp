@@ -22,7 +22,7 @@ namespace Spreadsheet {
 
 void SpreadsheetView::EditingDelegate::set_value(GUI::Variant const& value, GUI::ModelEditingDelegate::SelectionBehavior selection_behavior)
 {
-    if (value.as_string().is_null()) {
+    if (!value.is_valid() || value.as_string().is_empty()) {
         StringModelEditingDelegate::set_value("", selection_behavior);
         commit();
         return;
@@ -80,7 +80,7 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
         if (!is_dragging()) {
             auto tooltip = model->data(index, static_cast<GUI::ModelRole>(SheetModel::Role::Tooltip));
             if (tooltip.is_string()) {
-                set_tooltip(tooltip.as_string());
+                set_tooltip(tooltip.as_string().to_deprecated_string());
                 show_or_hide_tooltip();
             } else {
                 set_tooltip({});

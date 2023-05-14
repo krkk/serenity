@@ -126,7 +126,7 @@ bool SortingProxyModel::less_than(ModelIndex const& index1, ModelIndex const& in
     auto data1 = index1.data(m_sort_role);
     auto data2 = index2.data(m_sort_role);
     if (data1.is_string() && data2.is_string())
-        return data1.as_string().to_lowercase() < data2.as_string().to_lowercase();
+        return data1.as_string().to_lowercase().release_value_but_fixme_should_propagate_errors() < data2.as_string().to_lowercase().release_value_but_fixme_should_propagate_errors();
     return data1 < data2;
 }
 

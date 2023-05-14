@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         setenv("__libgui_launch_origin_rect", DeprecatedString::formatted("{},{},{},{}", launch_origin_rect.x(), launch_origin_rect.y(), launch_origin_rect.width(), launch_origin_rect.height()).characters(), 1);
 
         if (requires_root)
-            GUI::Process::spawn_or_show_error(window, "/bin/Escalator"sv, Array { executable });
+            GUI::Process::spawn_or_show_error(window, "/bin/Escalator"sv, Array { executable.bytes_as_string_view() });
         else
             GUI::Process::spawn_or_show_error(window, executable);
     };

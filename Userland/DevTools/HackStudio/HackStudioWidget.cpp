@@ -290,7 +290,7 @@ Vector<DeprecatedString> HackStudioWidget::selected_file_paths() const
 {
     Vector<DeprecatedString> files;
     m_project_tree_view->selection().for_each_index([&](const GUI::ModelIndex& index) {
-        DeprecatedString sub_path = index.data().as_string();
+        DeprecatedString sub_path = index.data().as_string().to_deprecated_string();
 
         GUI::ModelIndex parent_or_invalid = index.parent();
 

@@ -47,7 +47,7 @@ GitWidget::GitWidget()
         if (!index.is_valid())
             return;
 
-        const auto& selected = index.data().as_string();
+        const auto& selected = index.data().as_string().to_deprecated_string();
         show_diff(selected);
     };
 

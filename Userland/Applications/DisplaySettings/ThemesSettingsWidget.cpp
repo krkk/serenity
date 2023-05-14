@@ -99,10 +99,7 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
         }
     }
     color_scheme_combo.on_change = [this](auto&, const GUI::ModelIndex& index) {
-        auto result = String::from_deprecated_string(index.data().as_string());
-        if (result.is_error())
-            return;
-        m_selected_color_scheme_name = result.release_value();
+        m_selected_color_scheme_name = index.data().as_string();
         m_color_scheme_is_file_based = true;
         set_modified(true);
     };
