@@ -46,7 +46,7 @@ public:
             if (index.column() == 0) {
                 if (index.row() == ProcessModel::Column::Icon) {
                     // NOTE: The icon column is nameless in ProcessModel, but we want it to have a name here.
-                    return "Icon";
+                    return "Icon"_short_string;
                 }
                 return m_target.column_name(index.row());
             }

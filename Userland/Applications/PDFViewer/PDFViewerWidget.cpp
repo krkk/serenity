@@ -111,7 +111,7 @@ public:
         auto page = *static_cast<u32 const*>(index.internal_data());
         switch (index.column()) {
         case Columns::Page:
-            return "";
+            return String();
         case Columns::Message: {
             auto page_errors = m_paged_errors.get(page).release_value();
             // dbgln("Errors on page {}: {}. Requesting data for index {},{}", page, page_errors.size(), index.row(), index.column());

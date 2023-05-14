@@ -85,8 +85,8 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
     });
     pid_vm_fields.empend("Purgeable", Gfx::TextAlignment::CenterLeft, [](auto& object) {
         if (object.get_bool("volatile"sv).value_or(false))
-            return "Volatile";
-        return "Non-volatile";
+            return "Volatile"_string.release_value_but_fixme_should_propagate_errors();
+        return "Non-volatile"_string.release_value_but_fixme_should_propagate_errors();
     });
     pid_vm_fields.empend(
         "Page map", Gfx::TextAlignment::CenterLeft,

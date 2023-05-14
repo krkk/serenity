@@ -121,14 +121,14 @@ public:
 
                 return (u32)flags;
             }
-            return "";
+            return String();
         case Column::Text:
             return action_text(index);
         case Column::Menu:
             return menu_name(index);
         case Column::Shortcut:
             if (!action.shortcut().is_valid())
-                return "";
+                return String();
             return action.shortcut().to_deprecated_string();
         }
 

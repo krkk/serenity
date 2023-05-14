@@ -70,7 +70,7 @@ GUI::Variant SignpostsModel::data(GUI::ModelIndex const& index, GUI::ModelRole r
         if (index.column() == Column::ExecutableName) {
             if (auto const* process = m_profile.find_process(event.pid, event.serial))
                 return process->executable;
-            return "";
+            return String();
         }
 
         if (index.column() == Column::Timestamp) {

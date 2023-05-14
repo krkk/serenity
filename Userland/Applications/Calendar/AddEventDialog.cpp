@@ -143,15 +143,16 @@ DeprecatedString AddEventDialog::MeridiemListModel::column_name(int column) cons
 GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     constexpr Array short_month_names = {
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        "Jan"sv, "Feb"sv, "Mar"sv, "Apr"sv, "May"sv, "Jun"sv,
+        "Jul"sv, "Aug"sv, "Sep"sv, "Oct"sv, "Nov"sv, "Dec"sv
     };
 
     auto& month = short_month_names[index.row()];
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Month:
-            return month;
+            // They are all small enough to fit within a small string.
+            return MUST(String::from_utf8(month));
         default:
             VERIFY_NOT_REACHED();
         }
@@ -162,7 +163,7 @@ GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, 
 GUI::Variant AddEventDialog::MeridiemListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     constexpr Array meridiem_names = {
-        "AM", "PM"
+        "AM"_short_string, "PM"_short_string
     };
 
     auto& meridiem = meridiem_names[index.row()];

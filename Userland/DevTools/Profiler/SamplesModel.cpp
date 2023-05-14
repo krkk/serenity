@@ -74,7 +74,7 @@ GUI::Variant SamplesModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         if (index.column() == Column::ExecutableName) {
             if (auto const* process = m_profile.find_process(event.pid, event.serial))
                 return process->executable;
-            return "";
+            return String();
         }
 
         if (index.column() == Column::Timestamp) {
@@ -91,7 +91,7 @@ GUI::Variant SamplesModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
 
         if (index.column() == Column::Path) {
             if (!event.data.has<Profile::Event::ReadData>())
-                return "";
+                return String();
             return event.data.get<Profile::Event::ReadData>().path;
         }
 

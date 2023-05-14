@@ -26,19 +26,19 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget()
     pid_fds_fields.empend("offset", "Offset", Gfx::TextAlignment::CenterRight);
     pid_fds_fields.empend("absolute_path", "Path", Gfx::TextAlignment::CenterLeft);
     pid_fds_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        return object.get_bool("seekable"sv).value_or(false) ? "Seekable" : "Sequential";
+        return object.get_bool("seekable"sv).value_or(false) ? "Seekable"_string.release_value_but_fixme_should_propagate_errors() : "Sequential"_string.release_value_but_fixme_should_propagate_errors();
     });
     pid_fds_fields.empend("Blocking", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        return object.get_bool("blocking"sv).value_or(false) ? "Blocking" : "Nonblocking";
+        return object.get_bool("blocking"sv).value_or(false) ? "Blocking"_string.release_value_but_fixme_should_propagate_errors() : "Nonblocking"_string.release_value_but_fixme_should_propagate_errors();
     });
     pid_fds_fields.empend("On exec", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        return object.get_bool("cloexec"sv).value_or(false) ? "Close" : "Keep";
+        return object.get_bool("cloexec"sv).value_or(false) ? "Close"_short_string : "Keep"_short_string;
     });
     pid_fds_fields.empend("Can read", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        return object.get_bool("can_read"sv).value_or(false) ? "Yes" : "No";
+        return object.get_bool("can_read"sv).value_or(false) ? "Yes"_short_string : "No"_short_string;
     });
     pid_fds_fields.empend("Can write", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        return object.get_bool("can_write"sv).value_or(false) ? "Yes" : "No";
+        return object.get_bool("can_write"sv).value_or(false) ? "Yes"_short_string : "No"_short_string;
     });
 
     m_model = GUI::JsonArrayModel::create({}, move(pid_fds_fields));

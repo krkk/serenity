@@ -100,7 +100,7 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
             }
             return builder.to_deprecated_string();
         }
-        return "<...>";
+        return "<...>"_short_string;
     case Column::Type:
         return data_and_type.mime_type;
     case Column::Size:

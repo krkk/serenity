@@ -23,7 +23,7 @@ namespace Spreadsheet {
 void SpreadsheetView::EditingDelegate::set_value(GUI::Variant const& value, GUI::ModelEditingDelegate::SelectionBehavior selection_behavior)
 {
     if (!value.is_valid() || value.as_string().is_empty()) {
-        StringModelEditingDelegate::set_value("", selection_behavior);
+        StringModelEditingDelegate::set_value(String(), selection_behavior);
         commit();
         return;
     }
@@ -36,7 +36,7 @@ void SpreadsheetView::EditingDelegate::set_value(GUI::Variant const& value, GUI:
     if (option)
         return StringModelEditingDelegate::set_value(option->source(), selection_behavior);
 
-    StringModelEditingDelegate::set_value("", selection_behavior);
+    StringModelEditingDelegate::set_value(String(), selection_behavior);
 }
 
 void InfinitelyScrollableTableView::did_scroll()

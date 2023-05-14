@@ -171,7 +171,7 @@ public:
             df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
                 bool readonly = object.get_bool("readonly"sv).value_or(false);
                 int mount_flags = object.get_i32("mount_flags"sv).value_or(0);
-                return readonly || (mount_flags & MS_RDONLY) ? "Read-only" : "Read/Write";
+                return readonly || (mount_flags & MS_RDONLY) ? "Read-only"_string.release_value_but_fixme_should_propagate_errors() : "Read/Write"_string.release_value_but_fixme_should_propagate_errors();
             });
             df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
                 int mount_flags = object.get_i32("mount_flags"sv).value_or(0);

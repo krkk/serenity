@@ -44,9 +44,8 @@ public:
     }
 
     // FIXME: Remove this once we fully migrate to String
-    template<typename T>
-    Variant(T&& value)
-    requires(IsConstructible<DeprecatedString, T>)
+    template<OneOfIgnoringCV<DeprecatedString, StringView> T>
+    Variant(T const& value)
         : Variant(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors())
     {
     }

@@ -135,7 +135,7 @@ Variant JsonArrayModel::data(ModelIndex const& index, ModelRole role) const
         if (field_spec.massage_for_display)
             return field_spec.massage_for_display(object);
         if (!data.has_value())
-            return "";
+            return String();
         if (data->is_number())
             return data.value();
         return data->to_deprecated_string();

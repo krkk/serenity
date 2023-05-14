@@ -31,7 +31,7 @@ PlaylistWidget::PlaylistWidget()
 GUI::Variant PlaylistModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     if (role == GUI::ModelRole::TextAlignment)
-        return "CenterLeft";
+        return "CenterLeft"_string.release_value_but_fixme_should_propagate_errors();
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case 0:
