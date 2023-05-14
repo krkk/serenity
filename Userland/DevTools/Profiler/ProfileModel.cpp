@@ -124,7 +124,7 @@ GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
             return node->self_count();
         }
         if (index.column() == Column::ObjectName)
-            return node->object_name();
+            return String::from_deprecated_string(node->object_name()).release_value_but_fixme_should_propagate_errors();
         if (index.column() == Column::StackFrame) {
             if (node->is_root()) {
                 return DeprecatedString::formatted("{} ({})", node->process().basename, node->process().pid);

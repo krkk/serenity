@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2023, Karol Kosek <krkk@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Font.h>
@@ -21,7 +23,7 @@ namespace Detail {
 struct Boolean {
     bool value;
 };
-using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, i32, i64, u32, u64, DeprecatedString, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::ColorRole, NonnullRefPtr<Gfx::Bitmap const>, NonnullRefPtr<Gfx::Font const>, GUI::Icon>;
+using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, i32, i64, u32, u64, String, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::ColorRole, NonnullRefPtr<Gfx::Bitmap const>, NonnullRefPtr<Gfx::Font const>, GUI::Icon>;
 }
 
 class Variant : public Detail::VariantUnderlyingType {
@@ -41,18 +43,12 @@ public:
         return *this;
     }
 
+    // FIXME: Remove this once we fully migrate to String
     template<typename T>
     Variant(T&& value)
     requires(IsConstructible<DeprecatedString, T>)
-        : Variant(DeprecatedString(forward<T>(value)))
+        : Variant(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors())
     {
-    }
-    template<typename T>
-    Variant& operator=(T&& v)
-    requires(IsConstructible<DeprecatedString, T>)
-    {
-        set(DeprecatedString(v));
-        return *this;
     }
 
     template<OneOfIgnoringCV<Gfx::Bitmap, Gfx::Font> T>
@@ -76,7 +72,7 @@ public:
     bool is_u32() const { return has<u32>(); }
     bool is_u64() const { return has<u64>(); }
     bool is_float() const { return has<float>(); }
-    bool is_string() const { return has<DeprecatedString>(); }
+    bool is_string() const { return has<String>(); }
     bool is_bitmap() const { return has<NonnullRefPtr<Gfx::Bitmap const>>(); }
     bool is_color() const { return has<Color>(); }
     bool is_icon() const { return has<GUI::Icon>(); }
@@ -94,12 +90,11 @@ public:
         return visit(
             [](Empty) { return false; },
             [](Detail::Boolean v) { return v.value; },
-            [](DeprecatedString const& v) { return !v.is_null(); },
             [](Integral auto v) { return v != 0; },
             [](Gfx::IntPoint const& v) { return !v.is_zero(); },
             [](OneOf<Gfx::IntRect, Gfx::IntSize> auto const& v) { return !v.is_empty(); },
             [](Enum auto const&) { return true; },
-            [](OneOf<float, DeprecatedString, Color, NonnullRefPtr<Gfx::Font const>, NonnullRefPtr<Gfx::Bitmap const>, GUI::Icon> auto const&) { return true; });
+            [](OneOf<float, String, Color, NonnullRefPtr<Gfx::Font const>, NonnullRefPtr<Gfx::Bitmap const>, GUI::Icon> auto const&) { return true; });
     }
 
     i32 as_i32() const { return get<i32>(); }
@@ -115,12 +110,7 @@ public:
             [](Integral auto v) { return static_cast<T>(v); },
             [](FloatingPoint auto v) { return (T)v; },
             [](Detail::Boolean v) -> T { return v.value ? 1 : 0; },
-            [](DeprecatedString const& v) {
-                if constexpr (IsUnsigned<T>)
-                    return v.to_uint<T>().value_or(0u);
-                else
-                    return v.to_int<T>().value_or(0);
-            },
+            [](String const& v) { return v.to_number<T>().value_or(0); },
             [](Enum auto const&) -> T { return 0; },
             [](OneOf<Gfx::IntPoint, Gfx::IntRect, Gfx::IntSize, Color, NonnullRefPtr<Gfx::Font const>, NonnullRefPtr<Gfx::Bitmap const>, GUI::Icon> auto const&) -> T { return 0; });
     }
@@ -139,7 +129,7 @@ public:
     Gfx::IntPoint as_point() const { return get<Gfx::IntPoint>(); }
     Gfx::IntSize as_size() const { return get<Gfx::IntSize>(); }
     Gfx::IntRect as_rect() const { return get<Gfx::IntRect>(); }
-    DeprecatedString as_string() const { return get<DeprecatedString>(); }
+    DeprecatedString as_string() const { return get<String>().to_deprecated_string(); }
     Gfx::Bitmap const& as_bitmap() const { return *get<NonnullRefPtr<Gfx::Bitmap const>>(); }
     GUI::Icon as_icon() const { return get<GUI::Icon>(); }
     Color as_color() const { return get<Color>(); }
@@ -163,23 +153,28 @@ public:
     {
         if (auto const* p = get_pointer<Color>())
             return *p;
-        if (auto const* p = get_pointer<DeprecatedString>())
+        if (auto const* p = get_pointer<String>())
             return Color::from_string(*p).value_or(default_value);
         return default_value;
     }
 
     DeprecatedString to_deprecated_string() const
     {
+        return MUST(to_string()).to_deprecated_string();
+    }
+
+    ErrorOr<String> to_string() const
+    {
         return visit(
-            [](Empty) -> DeprecatedString { return "[null]"; },
-            [](DeprecatedString v) { return v; },
-            [](Gfx::TextAlignment v) { return DeprecatedString::formatted("Gfx::TextAlignment::{}", Gfx::to_string(v)); },
-            [](Gfx::ColorRole v) { return DeprecatedString::formatted("Gfx::ColorRole::{}", Gfx::to_string(v)); },
-            [](NonnullRefPtr<Gfx::Font const> const& font) { return DeprecatedString::formatted("[Font: {}]", font->name()); },
-            [](NonnullRefPtr<Gfx::Bitmap const> const&) -> DeprecatedString { return "[Gfx::Bitmap]"; },
-            [](GUI::Icon const&) -> DeprecatedString { return "[GUI::Icon]"; },
-            [](Detail::Boolean v) { return DeprecatedString::formatted("{}", v.value); },
-            [](auto const& v) { return DeprecatedString::formatted("{}", v); });
+            [](Empty) { return "[null]"_string; },
+            [](String v) -> ErrorOr<String> { return v; },
+            [](Gfx::TextAlignment v) { return String::formatted("Gfx::TextAlignment::{}", Gfx::to_string(v)); },
+            [](Gfx::ColorRole v) { return String::formatted("Gfx::ColorRole::{}", Gfx::to_string(v)); },
+            [](NonnullRefPtr<Gfx::Font const> const& font) { return String::formatted("[Font: {}]", font->name()); },
+            [](NonnullRefPtr<Gfx::Bitmap const> const&) { return "[Gfx::Bitmap]"_string; },
+            [](GUI::Icon const&) { return "[GUI::Icon]"_string; },
+            [](Detail::Boolean v) { return String::formatted("{}", v.value); },
+            [](auto const& v) { return String::formatted("{}", v); });
     }
 
     bool operator==(Variant const&) const;

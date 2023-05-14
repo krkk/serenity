@@ -57,7 +57,7 @@ GUI::Variant IndividualSampleModel::data(GUI::ModelIndex const& index, GUI::Mode
         }
 
         if (index.column() == Column::ObjectName) {
-            return frame.object_name;
+            return String::from_deprecated_string(frame.object_name).release_value_but_fixme_should_propagate_errors();
         }
         return {};
     }

@@ -44,7 +44,7 @@ Variant& Variant::operator=(JsonValue const& value)
     }
 
     if (value.is_string()) {
-        set(value.as_string());
+        set(String::from_deprecated_string(value.as_string()).release_value_but_fixme_should_propagate_errors());
         return *this;
     }
 
@@ -67,11 +67,11 @@ bool Variant::operator==(Variant const& other) const
                     return &own_value.impl() == &other_value.impl();
                 // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
                 else
-                    return to_deprecated_string() == other.to_deprecated_string();
+                    return to_string().release_value_but_fixme_should_propagate_errors() == other.to_string().release_value_but_fixme_should_propagate_errors();
             },
             [&](auto const&) {
                 // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
-                return to_deprecated_string() == other.to_deprecated_string();
+                return to_string().release_value_but_fixme_should_propagate_errors() == other.to_string().release_value_but_fixme_should_propagate_errors();
             });
     });
 }
@@ -93,10 +93,10 @@ bool Variant::operator<(Variant const& other) const
                     return own_value < other_value;
                 // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
                 else
-                    return to_deprecated_string() < other.to_deprecated_string();
+                    return to_string().release_value_but_fixme_should_propagate_errors() < other.to_string().release_value_but_fixme_should_propagate_errors();
             },
             [&](auto const&) -> bool {
-                return to_deprecated_string() < other.to_deprecated_string(); // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
+                return to_string().release_value_but_fixme_should_propagate_errors() < other.to_string().release_value_but_fixme_should_propagate_errors(); // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
             });
     });
 }
