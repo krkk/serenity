@@ -18,16 +18,16 @@
 namespace GamesSettings {
 
 struct BoardTheme {
-    StringView name;
+    String name;
     Color dark_square_color;
     Color light_square_color;
 };
 
 // The following colors have been taken from lichess.org, but I'm pretty sure they took them from chess.com.
 Array<BoardTheme, 3> s_board_themes {
-    BoardTheme { "Beige"sv, Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) },
-    BoardTheme { "Blue"sv, Color::from_rgb(0x8ca2ad), Color::from_rgb(0xdee3e6) },
-    BoardTheme { "Green"sv, Color::from_rgb(0x86a666), Color::from_rgb(0xffffdd) },
+    BoardTheme { "Beige"_short_string, Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) },
+    BoardTheme { "Blue"_short_string, Color::from_rgb(0x8ca2ad), Color::from_rgb(0xdee3e6) },
+    BoardTheme { "Green"_short_string, Color::from_rgb(0x86a666), Color::from_rgb(0xffffdd) },
 };
 
 static BoardTheme& get_board_theme(StringView name)
@@ -260,7 +260,7 @@ ErrorOr<void> ChessSettingsWidget::initialize()
 
     m_board_theme_combobox = find_descendant_of_type_named<GUI::ComboBox>("board_theme");
     m_board_theme_combobox->set_model(TRY(BoardThemeModel::create()));
-    m_board_theme_combobox->set_text(board_theme.name, GUI::AllowCallback::No);
+    m_board_theme_combobox->set_text(board_theme.name.to_deprecated_string(), GUI::AllowCallback::No);
     m_board_theme_combobox->on_change = [&](auto&, auto& index) {
         set_modified(true);
 
@@ -305,7 +305,7 @@ void ChessSettingsWidget::reset_default_values()
     m_piece_set_combobox->set_text("stelar7");
     (void)m_preview->set_piece_set_name("stelar7");
     auto& board_theme = get_board_theme("Beige"sv);
-    m_board_theme_combobox->set_text(board_theme.name);
+    m_board_theme_combobox->set_text(board_theme.name.to_deprecated_string());
     m_preview->set_dark_square_color(board_theme.dark_square_color);
     m_preview->set_light_square_color(board_theme.light_square_color);
     m_show_coordinates_checkbox->set_checked(true);
