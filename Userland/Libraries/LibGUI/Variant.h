@@ -21,7 +21,7 @@ namespace Detail {
 struct Boolean {
     bool value;
 };
-using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, i32, i64, u32, u64, DeprecatedString, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::ColorRole, Gfx::AlignmentRole, Gfx::FlagRole, Gfx::MetricRole, Gfx::PathRole, NonnullRefPtr<Gfx::Bitmap const>, NonnullRefPtr<Gfx::Font const>, GUI::Icon>;
+using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, i32, i64, u32, u64, DeprecatedString, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::ColorRole, NonnullRefPtr<Gfx::Bitmap const>, NonnullRefPtr<Gfx::Font const>, GUI::Icon>;
 }
 
 class Variant : public Detail::VariantUnderlyingType {
@@ -86,10 +86,6 @@ public:
     bool is_font() const { return has<NonnullRefPtr<Gfx::Font const>>(); }
     bool is_text_alignment() const { return has<Gfx::TextAlignment>(); }
     bool is_color_role() const { return has<Gfx::ColorRole>(); }
-    bool is_alignment_role() const { return has<Gfx::AlignmentRole>(); }
-    bool is_flag_role() const { return has<Gfx::FlagRole>(); }
-    bool is_metric_role() const { return has<Gfx::MetricRole>(); }
-    bool is_path_role() const { return has<Gfx::PathRole>(); }
 
     bool as_bool() const { return get<Detail::Boolean>().value; }
 
@@ -163,34 +159,6 @@ public:
         return Gfx::ColorRole::NoRole;
     }
 
-    Gfx::AlignmentRole to_alignment_role() const
-    {
-        if (auto const* p = get_pointer<Gfx::AlignmentRole>())
-            return *p;
-        return Gfx::AlignmentRole::NoRole;
-    }
-
-    Gfx::FlagRole to_flag_role() const
-    {
-        if (auto const* p = get_pointer<Gfx::FlagRole>())
-            return *p;
-        return Gfx::FlagRole::NoRole;
-    }
-
-    Gfx::MetricRole to_metric_role() const
-    {
-        if (auto const* p = get_pointer<Gfx::MetricRole>())
-            return *p;
-        return Gfx::MetricRole::NoRole;
-    }
-
-    Gfx::PathRole to_path_role() const
-    {
-        if (auto const* p = get_pointer<Gfx::PathRole>())
-            return *p;
-        return Gfx::PathRole::NoRole;
-    }
-
     Color to_color(Color default_value = {}) const
     {
         if (auto const* p = get_pointer<Color>())
@@ -207,10 +175,6 @@ public:
             [](DeprecatedString v) { return v; },
             [](Gfx::TextAlignment v) { return DeprecatedString::formatted("Gfx::TextAlignment::{}", Gfx::to_string(v)); },
             [](Gfx::ColorRole v) { return DeprecatedString::formatted("Gfx::ColorRole::{}", Gfx::to_string(v)); },
-            [](Gfx::AlignmentRole v) { return DeprecatedString::formatted("Gfx::AlignmentRole::{}", Gfx::to_string(v)); },
-            [](Gfx::FlagRole v) { return DeprecatedString::formatted("Gfx::FlagRole::{}", Gfx::to_string(v)); },
-            [](Gfx::MetricRole v) { return DeprecatedString::formatted("Gfx::MetricRole::{}", Gfx::to_string(v)); },
-            [](Gfx::PathRole v) { return DeprecatedString::formatted("Gfx::PathRole::{}", Gfx::to_string(v)); },
             [](NonnullRefPtr<Gfx::Font const> const& font) { return DeprecatedString::formatted("[Font: {}]", font->name()); },
             [](NonnullRefPtr<Gfx::Bitmap const> const&) -> DeprecatedString { return "[Gfx::Bitmap]"; },
             [](GUI::Icon const&) -> DeprecatedString { return "[GUI::Icon]"; },
