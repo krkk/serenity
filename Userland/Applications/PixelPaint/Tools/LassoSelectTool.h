@@ -34,6 +34,7 @@ private:
 
     RefPtr<GUI::Widget> m_properties_widget;
     Selection::MergeMode m_merge_mode { Selection::MergeMode::Set };
+    Vector<String> m_merge_mode_names;
 
     Gfx::IntPoint m_start_position;
     Gfx::IntPoint m_most_recent_position;

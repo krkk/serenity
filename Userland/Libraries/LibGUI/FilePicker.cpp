@@ -122,16 +122,16 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     if (m_allowed_file_types.has_value()) {
         for (auto& filter : *m_allowed_file_types) {
             if (!filter.extensions.has_value()) {
-                m_allowed_file_types_names.append(filter.name);
+                m_allowed_file_types_names.append(String::from_deprecated_string(filter.name).release_value_but_fixme_should_propagate_errors());
                 continue;
             }
 
             StringBuilder extension_list;
             extension_list.join("; "sv, *filter.extensions);
-            m_allowed_file_types_names.append(DeprecatedString::formatted("{} ({})", filter.name, extension_list.to_deprecated_string()));
+            m_allowed_file_types_names.append(String::formatted("{} ({})", filter.name, extension_list.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
         }
 
-        file_types_filters_combo->set_model(*GUI::ItemListModel<DeprecatedString, Vector<DeprecatedString>>::create(m_allowed_file_types_names));
+        file_types_filters_combo->set_model(*GUI::ItemListModel<String>::create(m_allowed_file_types_names));
         file_types_filters_combo->on_change = [this](DeprecatedString const&, GUI::ModelIndex const& index) {
             m_model->set_allowed_file_extensions((*m_allowed_file_types)[index.row()].extensions);
         };

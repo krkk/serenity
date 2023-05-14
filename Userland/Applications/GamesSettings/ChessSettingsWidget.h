@@ -28,7 +28,7 @@ private:
     ChessSettingsWidget() = default;
     ErrorOr<void> initialize();
 
-    Vector<DeprecatedString> m_piece_sets;
+    Vector<String> m_piece_sets;
 
     RefPtr<ChessGamePreview> m_preview;
     RefPtr<GUI::ComboBox> m_piece_set_combobox;

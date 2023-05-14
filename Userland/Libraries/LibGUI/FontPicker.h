@@ -37,8 +37,8 @@ private:
     RefPtr<SpinBox> m_size_spin_box;
     RefPtr<Label> m_sample_text_label;
 
-    Vector<DeprecatedString> m_families;
-    Vector<DeprecatedString> m_variants;
+    Vector<String> m_families;
+    Vector<String> m_variants;
     Vector<int> m_sizes;
 
     Optional<DeprecatedString> m_family;

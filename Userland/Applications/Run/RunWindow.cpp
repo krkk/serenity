@@ -28,7 +28,7 @@
 
 RunWindow::RunWindow()
     : m_path_history()
-    , m_path_history_model(GUI::ItemListModel<DeprecatedString>::create(m_path_history))
+    , m_path_history_model(GUI::ItemListModel<String>::create(m_path_history))
 {
     // FIXME: Handle failure to load history somehow.
     (void)load_history();
@@ -95,8 +95,8 @@ void RunWindow::do_run()
 
     if (run_via_launch(run_input) || run_as_command(run_input)) {
         // Remove any existing history entry, prepend the successful run string to history and save.
-        m_path_history.remove_all_matching([&](DeprecatedString v) { return v == run_input; });
-        m_path_history.prepend(run_input);
+        m_path_history.remove_all_matching([&](String const& v) { return v == run_input.view(); });
+        m_path_history.prepend(String::from_deprecated_string(run_input).release_value_but_fixme_should_propagate_errors());
         // FIXME: Handle failure to save history somehow.
         (void)save_history();
 
@@ -175,7 +175,7 @@ ErrorOr<void> RunWindow::load_history()
     while (!buffered_file->is_eof()) {
         StringView line = TRY(buffered_file->read_line(line_buffer));
         if (!line.is_empty() && !line.is_whitespace())
-            m_path_history.append(line);
+            TRY(m_path_history.try_append(TRY(String::from_utf8(line))));
     }
     return {};
 }

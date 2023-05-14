@@ -52,7 +52,7 @@ CSVImportDialogPage::CSVImportDialogPage(StringView csv)
     m_data_preview_error_label = m_page->body_widget().find_descendant_of_type_named<GUI::Label>("data_preview_error_label");
     m_data_preview_widget = m_page->body_widget().find_descendant_of_type_named<GUI::StackWidget>("data_preview_widget");
 
-    m_quote_escape_combo_box->set_model(GUI::ItemListModel<DeprecatedString>::create(m_quote_escape_items));
+    m_quote_escape_combo_box->set_model(GUI::ItemListModel<String>::create(m_quote_escape_items));
 
     // By default, use commas, double quotes with repeat, and disable headers.
     m_delimiter_comma_radio->set_checked(true);
@@ -251,11 +251,11 @@ ErrorOr<Vector<NonnullRefPtr<Sheet>>, DeprecatedString> ImportDialog::make_and_r
         page->body_widget().load_from_gml(select_format_page_gml).release_value_but_fixme_should_propagate_errors();
         auto format_combo_box = page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("select_format_page_format_combo_box");
 
-        Vector<DeprecatedString> supported_formats {
-            "CSV (text/csv)",
-            "Spreadsheet Worksheet",
+        Vector<String> supported_formats {
+            "CSV (text/csv)"_string.release_value_but_fixme_should_propagate_errors(),
+            "Spreadsheet Worksheet"_string.release_value_but_fixme_should_propagate_errors(),
         };
-        format_combo_box->set_model(GUI::ItemListModel<DeprecatedString>::create(supported_formats));
+        format_combo_box->set_model(GUI::ItemListModel<String>::create(supported_formats));
 
         wizard->push_page(page);
 

@@ -18,7 +18,8 @@ public:
 
 private:
     CalendarSettingsWidget();
-    static constexpr Array<StringView, 2> const m_view_modes = { "Month"sv, "Year"sv };
+    Array<String, 2> const m_view_modes = { "Month"_short_string, "Year"_short_string };
+    Vector<String> m_long_day_names;
 
     RefPtr<GUI::ComboBox> m_first_day_of_week_combobox;
     RefPtr<GUI::ComboBox> m_first_day_of_weekend_combobox;

@@ -50,10 +50,10 @@ private:
     RefPtr<GUI::CheckBox> m_export_header_check_box;
     RefPtr<GUI::CheckBox> m_quote_all_fields_check_box;
     RefPtr<GUI::TextEditor> m_data_preview_text_editor;
-    Vector<DeprecatedString> m_quote_escape_items {
+    Vector<String> m_quote_escape_items {
         // Note: Keep in sync with Writer::WriterTraits::QuoteEscape.
-        "Repeat",
-        "Backslash",
+        "Repeat"_short_string,
+        "Backslash"_string.release_value_but_fixme_should_propagate_errors(),
     };
 };
 

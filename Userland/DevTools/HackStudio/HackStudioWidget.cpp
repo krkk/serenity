@@ -344,7 +344,7 @@ bool HackStudioWidget::open_file(DeprecatedString const& full_filename, size_t l
     } else {
         new_project_file = m_project->create_file(filename);
         m_open_files.set(filename, *new_project_file);
-        m_open_files_vector.append(filename);
+        m_open_files_vector.append(String::from_deprecated_string(filename).release_value_but_fixme_should_propagate_errors());
 
         if (!m_file_watcher.is_null()) {
             auto watch_result = m_file_watcher->add_watch(filename, Core::FileWatcherEvent::Type::Deleted);
@@ -396,7 +396,7 @@ void HackStudioWidget::close_file_in_all_editors(DeprecatedString const& filenam
 {
     m_open_files.remove(filename);
     m_open_files_vector.remove_all_matching(
-        [&filename](DeprecatedString const& element) { return element == filename; });
+        [&filename](String const& element) { return element == filename.view(); });
 
     for (auto& editor_wrapper : m_all_editor_wrappers) {
         Editor& editor = editor_wrapper->editor();
@@ -408,7 +408,7 @@ void HackStudioWidget::close_file_in_all_editors(DeprecatedString const& filenam
                 editor.set_document(CodeDocument::create());
                 editor_wrapper->set_filename("");
             } else {
-                auto& first_path = m_open_files_vector[0];
+                auto first_path = m_open_files_vector[0].to_deprecated_string();
                 auto& document = m_open_files.get(first_path).value()->code_document();
                 editor.set_document(document);
                 editor_wrapper->set_filename(first_path);
@@ -926,8 +926,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
         m_open_files.set(relative_file_path, *new_project_file);
         m_open_files.remove(old_filename);
 
-        m_open_files_vector.append(relative_file_path);
-        m_open_files_vector.remove_all_matching([&old_filename](auto const& element) { return element == old_filename; });
+        m_open_files_vector.append(String::from_deprecated_string(relative_file_path).release_value_but_fixme_should_propagate_errors());
+        m_open_files_vector.remove_all_matching([&old_filename](auto const& element) { return element == old_filename.view(); });
 
         update_window_title();
         update_current_editor_title();
@@ -1208,8 +1208,8 @@ void HackStudioWidget::file_renamed(DeprecatedString const& old_name, Deprecated
     }
 
     if (m_open_files.contains(old_name)) {
-        VERIFY(m_open_files_vector.remove_first_matching([&old_name](auto const& file) { return file == old_name; }));
-        m_open_files_vector.append(new_name);
+        VERIFY(m_open_files_vector.remove_first_matching([&old_name](auto const& file) { return file == old_name.view(); }));
+        m_open_files_vector.append(String::from_deprecated_string(new_name).release_value_but_fixme_should_propagate_errors());
 
         ProjectFile* f = m_open_files.get(old_name).release_value();
         m_open_files.set(new_name, *f);
@@ -1267,7 +1267,7 @@ void HackStudioWidget::configure_project_tree_view()
 void HackStudioWidget::create_open_files_view(GUI::Widget& parent)
 {
     m_open_files_view = parent.add<GUI::ListView>();
-    auto open_files_model = GUI::ItemListModel<DeprecatedString>::create(m_open_files_vector);
+    auto open_files_model = GUI::ItemListModel<String>::create(m_open_files_vector);
     m_open_files_view->set_model(open_files_model);
 
     m_open_files_view->on_activation = [this](auto& index) {

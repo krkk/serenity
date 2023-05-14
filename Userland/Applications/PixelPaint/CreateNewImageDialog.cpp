@@ -59,11 +59,11 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
         Custom
     };
 
-    static constexpr AK::Array suggested_backgrounds = {
-        "Transparent"sv,
-        "White"sv,
-        "Black"sv,
-        "Custom"sv
+    static AK::Array suggested_backgrounds = {
+        "Transparent"_string.release_value_but_fixme_should_propagate_errors(),
+        "White"_short_string,
+        "Black"_short_string,
+        "Custom"_short_string
     };
 
     m_background_color = Color::from_string(
@@ -86,7 +86,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     auto& background_color_input = main_widget->add<GUI::ColorInput>();
     background_color_input.set_visible(false);
     background_color_combo.set_only_allow_values_from_model(true);
-    background_color_combo.set_model(*GUI::ItemListModel<StringView, decltype(suggested_backgrounds)>::create(suggested_backgrounds));
+    background_color_combo.set_model(*GUI::ItemListModel<String, decltype(suggested_backgrounds)>::create(suggested_backgrounds));
     background_color_combo.on_change = [&](auto&, const GUI::ModelIndex& index) {
         auto background_index = static_cast<BackgroundIndex>(index.row());
         m_background_color = [&]() -> Gfx::Color {

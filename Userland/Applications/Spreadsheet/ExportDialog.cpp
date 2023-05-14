@@ -58,7 +58,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
 
     m_data_preview_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
-    m_quote_escape_combo_box->set_model(GUI::ItemListModel<DeprecatedString>::create(m_quote_escape_items));
+    m_quote_escape_combo_box->set_model(GUI::ItemListModel<String>::create(m_quote_escape_items));
 
     // By default, use commas, double quotes with repeat, disable headers, and quote only the fields that require quoting.
     m_delimiter_comma_radio->set_checked(true);
@@ -222,11 +222,11 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, 
         TRY(page->body_widget().load_from_gml(select_format_page_gml));
         auto format_combo_box = page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("select_format_page_format_combo_box");
 
-        Vector<DeprecatedString> supported_formats {
-            "CSV (text/csv)",
-            "Spreadsheet Worksheet",
+        Vector<String> supported_formats {
+            TRY("CSV (text/csv)"_string),
+            TRY("Spreadsheet Worksheet"_string),
         };
-        format_combo_box->set_model(GUI::ItemListModel<DeprecatedString>::create(supported_formats));
+        format_combo_box->set_model(GUI::ItemListModel<String>::create(supported_formats));
 
         wizard->push_page(page);
 

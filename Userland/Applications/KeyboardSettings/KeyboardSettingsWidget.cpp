@@ -63,7 +63,7 @@ private:
         auto iterator_result = Core::Directory::for_each_entry("/res/keymaps/"sv, Core::DirIterator::Flags::SkipDots, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
             auto basename = entry.name.replace(".json"sv, ""sv, ReplaceMode::FirstOnly);
             if (selected_keymaps.find(basename).is_end())
-                m_character_map_files.append(basename);
+                m_character_map_files.append(String::from_deprecated_string(basename).release_value_but_fixme_should_propagate_errors());
             return IterationDecision::Continue;
         });
 
@@ -74,11 +74,11 @@ private:
 
         quick_sort(m_character_map_files);
 
-        m_selected_keymap = m_character_map_files.first();
+        m_selected_keymap = m_character_map_files.first().to_deprecated_string();
 
         m_keymaps_combobox = *widget->find_descendant_of_type_named<GUI::ComboBox>("keymaps_combobox");
         m_keymaps_combobox->set_only_allow_values_from_model(true);
-        m_keymaps_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_character_map_files));
+        m_keymaps_combobox->set_model(*GUI::ItemListModel<String>::create(m_character_map_files));
         m_keymaps_combobox->set_selected_index(0);
 
         m_keymaps_combobox->on_change = [&](auto& keymap, auto) {
@@ -97,7 +97,7 @@ private:
     }
 
     RefPtr<GUI::ComboBox> m_keymaps_combobox;
-    Vector<DeprecatedString> m_character_map_files;
+    Vector<String> m_character_map_files;
     DeprecatedString m_selected_keymap;
 };
 

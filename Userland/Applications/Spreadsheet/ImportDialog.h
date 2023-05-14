@@ -47,10 +47,10 @@ private:
     RefPtr<GUI::TableView> m_data_preview_table_view;
     RefPtr<GUI::Label> m_data_preview_error_label;
     RefPtr<GUI::StackWidget> m_data_preview_widget;
-    Vector<DeprecatedString> m_quote_escape_items {
+    Vector<String> m_quote_escape_items {
         // Note: Keep in sync with Reader::ParserTraits::QuoteEscape.
-        "Repeat",
-        "Backslash",
+        "Repeat"_short_string,
+        "Backslash"_string.release_value_but_fixme_should_propagate_errors(),
     };
 };
 

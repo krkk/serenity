@@ -104,16 +104,16 @@ ErrorOr<GUI::Widget*> WandSelectTool::get_properties_widget()
     for (int i = 0; i < (int)Selection::MergeMode::__Count; i++) {
         switch ((Selection::MergeMode)i) {
         case Selection::MergeMode::Set:
-            TRY(m_merge_mode_names.try_append("Set"));
+            TRY(m_merge_mode_names.try_append("Set"_short_string));
             break;
         case Selection::MergeMode::Add:
-            TRY(m_merge_mode_names.try_append("Add"));
+            TRY(m_merge_mode_names.try_append("Add"_short_string));
             break;
         case Selection::MergeMode::Subtract:
-            TRY(m_merge_mode_names.try_append("Subtract"));
+            TRY(m_merge_mode_names.try_append(TRY("Subtract"_string)));
             break;
         case Selection::MergeMode::Intersect:
-            TRY(m_merge_mode_names.try_append("Intersect"));
+            TRY(m_merge_mode_names.try_append(TRY("Intersect"_string)));
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -122,7 +122,7 @@ ErrorOr<GUI::Widget*> WandSelectTool::get_properties_widget()
 
     auto mode_combo = TRY(mode_container->try_add<GUI::ComboBox>());
     mode_combo->set_only_allow_values_from_model(true);
-    mode_combo->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_merge_mode_names));
+    mode_combo->set_model(*GUI::ItemListModel<String>::create(m_merge_mode_names));
     mode_combo->set_selected_index((int)m_merge_mode);
     mode_combo->on_change = [this](auto&&, GUI::ModelIndex const& index) {
         VERIFY(index.row() >= 0);

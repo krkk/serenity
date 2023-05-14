@@ -24,8 +24,6 @@
 #include <spawn.h>
 #include <unistd.h>
 
-using StringViewListModel = GUI::ItemListModel<StringView, ReadonlySpan<StringView>>;
-
 static constexpr auto PI_OVER_180 = M_PIf32 / 180.0f;
 static constexpr auto PI_OVER_4 = M_PIf32 / 4.0f;
 static constexpr auto TAU = M_PIf32 * 2.0f;
@@ -63,12 +61,14 @@ TimeZoneSettingsWidget::TimeZoneSettingsWidget()
 {
     load_from_gml(time_zone_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
-    static auto time_zones = TimeZone::all_time_zones();
+    static Vector<String> time_zones;
+    for (auto time_zone : TimeZone::all_time_zones())
+        time_zones.append(String::from_deprecated_string(time_zone).release_value_but_fixme_should_propagate_errors());
     m_time_zone = TimeZone::system_time_zone();
 
     m_time_zone_combo_box = *find_descendant_of_type_named<GUI::ComboBox>("time_zone_input");
     m_time_zone_combo_box->set_only_allow_values_from_model(true);
-    m_time_zone_combo_box->set_model(*StringViewListModel::create(time_zones));
+    m_time_zone_combo_box->set_model(*GUI::ItemListModel<String>::create(time_zones));
     m_time_zone_combo_box->set_text(m_time_zone);
     m_time_zone_combo_box->on_change = [&](auto, auto) {
         set_modified(true);

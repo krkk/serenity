@@ -247,10 +247,10 @@ ErrorOr<void> ChessSettingsWidget::initialize()
 
     m_piece_set_combobox = find_descendant_of_type_named<GUI::ComboBox>("piece_set");
     TRY(Core::Directory::for_each_entry("/res/graphics/chess/sets/"sv, Core::DirIterator::SkipParentAndBaseDir, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
-        TRY(m_piece_sets.try_append(entry.name));
+        TRY(m_piece_sets.try_append(TRY(String::from_deprecated_string(entry.name))));
         return IterationDecision::Continue;
     }));
-    auto piece_set_model = GUI::ItemListModel<DeprecatedString>::create(m_piece_sets);
+    auto piece_set_model = GUI::ItemListModel<String>::create(m_piece_sets);
     m_piece_set_combobox->set_model(piece_set_model);
     m_piece_set_combobox->set_text(piece_set_name, GUI::AllowCallback::No);
     m_piece_set_combobox->on_change = [&](auto& value, auto&) {

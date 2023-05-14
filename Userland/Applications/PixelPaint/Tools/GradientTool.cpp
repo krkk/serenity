@@ -211,26 +211,15 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(80, 20);
 
-        static constexpr auto s_mode_names = [] {
-            Array<StringView, (int)GradientMode::__Count> names;
-            for (size_t i = 0; i < names.size(); i++) {
-                switch ((GradientMode)i) {
-                case GradientMode::Linear:
-                    names[i] = "Linear"sv;
-                    break;
-                case GradientMode::Radial:
-                    names[i] = "Radial"sv;
-                    break;
-                default:
-                    break;
-                }
-            }
-            return names;
-        }();
+        static auto s_mode_names = Array {
+            "Linear"_short_string,
+            "Radial"_short_string,
+        };
+        static_assert(s_mode_names.size() == to_underlying(GradientMode::__Count));
 
         auto mode_combobox = TRY(mode_container->try_add<GUI::ComboBox>());
         mode_combobox->set_only_allow_values_from_model(true);
-        mode_combobox->set_model(*GUI::ItemListModel<StringView, decltype(s_mode_names)>::create(s_mode_names));
+        mode_combobox->set_model(*GUI::ItemListModel<String, decltype(s_mode_names)>::create(s_mode_names));
         mode_combobox->set_selected_index((int)m_mode, GUI::AllowCallback::No);
 
         auto opacity_container = TRY(properties_widget->try_add<GUI::Widget>());

@@ -31,8 +31,8 @@ private:
     ErrorOr<void> load_history();
     ErrorOr<void> save_history();
 
-    Vector<DeprecatedString> m_path_history;
-    NonnullRefPtr<GUI::ItemListModel<DeprecatedString>> m_path_history_model;
+    Vector<String> m_path_history;
+    NonnullRefPtr<GUI::ItemListModel<String>> m_path_history_model;
 
     RefPtr<GUI::ImageWidget> m_icon_image_widget;
     RefPtr<GUI::Button> m_ok_button;

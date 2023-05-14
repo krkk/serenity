@@ -201,32 +201,28 @@ ErrorOr<GUI::Widget*> PolygonalSelectTool::get_properties_widget()
     mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     mode_label->set_fixed_size(80, 20);
 
-    static constexpr auto s_merge_mode_names = [] {
-        Array<StringView, (int)Selection::MergeMode::__Count> names;
-        for (size_t i = 0; i < names.size(); i++) {
-            switch ((Selection::MergeMode)i) {
-            case Selection::MergeMode::Set:
-                names[i] = "Set"sv;
-                break;
-            case Selection::MergeMode::Add:
-                names[i] = "Add"sv;
-                break;
-            case Selection::MergeMode::Subtract:
-                names[i] = "Subtract"sv;
-                break;
-            case Selection::MergeMode::Intersect:
-                names[i] = "Intersect"sv;
-                break;
-            default:
-                break;
-            }
+    for (int i = 0; i < (int)Selection::MergeMode::__Count; i++) {
+        switch ((Selection::MergeMode)i) {
+        case Selection::MergeMode::Set:
+            TRY(m_merge_mode_names.try_append("Set"_short_string));
+            break;
+        case Selection::MergeMode::Add:
+            TRY(m_merge_mode_names.try_append("Add"_short_string));
+            break;
+        case Selection::MergeMode::Subtract:
+            TRY(m_merge_mode_names.try_append(TRY("Subtract"_string)));
+            break;
+        case Selection::MergeMode::Intersect:
+            TRY(m_merge_mode_names.try_append(TRY("Intersect"_string)));
+            break;
+        default:
+            VERIFY_NOT_REACHED();
         }
-        return names;
-    }();
+    }
 
     auto mode_combo = TRY(mode_container->try_add<GUI::ComboBox>());
     mode_combo->set_only_allow_values_from_model(true);
-    mode_combo->set_model(*GUI::ItemListModel<StringView, decltype(s_merge_mode_names)>::create(s_merge_mode_names));
+    mode_combo->set_model(*GUI::ItemListModel<String>::create(m_merge_mode_names));
     mode_combo->set_selected_index((int)m_merge_mode);
     mode_combo->on_change = [this](auto&&, GUI::ModelIndex const& index) {
         VERIFY(index.row() >= 0);

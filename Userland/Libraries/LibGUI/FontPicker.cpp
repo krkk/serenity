@@ -30,11 +30,11 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
     widget->load_from_gml(font_picker_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     m_family_list_view = *widget->find_descendant_of_type_named<ListView>("family_list_view");
-    m_family_list_view->set_model(ItemListModel<DeprecatedString>::create(m_families));
+    m_family_list_view->set_model(ItemListModel<String>::create(m_families));
     m_family_list_view->horizontal_scrollbar().set_visible(false);
 
     m_variant_list_view = *widget->find_descendant_of_type_named<ListView>("variant_list_view");
-    m_variant_list_view->set_model(ItemListModel<DeprecatedString>::create(m_variants));
+    m_variant_list_view->set_model(ItemListModel<String>::create(m_variants));
     m_variant_list_view->horizontal_scrollbar().set_visible(false);
 
     m_size_spin_box = *widget->find_descendant_of_type_named<SpinBox>("size_spin_box");
@@ -50,8 +50,9 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
     Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
         if (m_fixed_width_only && !typeface.is_fixed_width())
             return;
-        if (!m_families.contains_slow(typeface.family()))
-            m_families.append(typeface.family());
+        auto family = String::from_deprecated_string(typeface.family()).release_value_but_fixme_should_propagate_errors();
+        if (!m_families.contains_slow(family))
+            m_families.append(family);
     });
     quick_sort(m_families);
 
@@ -62,13 +63,14 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
             if (m_fixed_width_only && !typeface.is_fixed_width())
                 return;
-            if (typeface.family() == m_family.value() && !m_variants.contains_slow(typeface.variant()))
-                m_variants.append(typeface.variant());
+            auto variant = String::from_deprecated_string(typeface.variant()).release_value_but_fixme_should_propagate_errors();
+            if (typeface.family() == m_family.value() && !m_variants.contains_slow(variant))
+                m_variants.append(variant);
         });
         quick_sort(m_variants);
         Optional<size_t> index_of_old_variant_in_new_list;
         if (m_variant.has_value())
-            index_of_old_variant_in_new_list = m_variants.find_first_index(m_variant.value());
+            index_of_old_variant_in_new_list = m_variants.find_first_index(String::from_deprecated_string(m_variant.value()).release_value_but_fixme_should_propagate_errors());
 
         m_variant_list_view->model()->invalidate();
         m_variant_list_view->set_cursor(m_variant_list_view->model()->index(index_of_old_variant_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
@@ -194,11 +196,11 @@ void FontPicker::set_font(Gfx::Font const* font)
     m_variant = font->variant();
     m_size = font->presentation_size();
 
-    auto family_index = m_families.find_first_index(m_font->family());
+    auto family_index = m_families.find_first_index(String::from_deprecated_string(m_font->family()).release_value_but_fixme_should_propagate_errors());
     if (family_index.has_value())
         m_family_list_view->set_cursor(m_family_list_view->model()->index(family_index.value()), GUI::AbstractView::SelectionUpdate::Set);
 
-    auto variant_index = m_variants.find_first_index(m_font->variant());
+    auto variant_index = m_variants.find_first_index(String::from_deprecated_string(m_font->variant()).release_value_but_fixme_should_propagate_errors());
     if (variant_index.has_value())
         m_variant_list_view->set_cursor(m_variant_list_view->model()->index(variant_index.value()), GUI::AbstractView::SelectionUpdate::Set);
 

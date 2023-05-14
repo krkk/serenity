@@ -105,16 +105,16 @@ GoToOffsetDialog::GoToOffsetDialog()
     m_offset_from_box = *main_widget->find_descendant_of_type_named<GUI::ComboBox>("offset_from");
     m_statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
-    m_offset_type.append("Decimal");
-    m_offset_type.append("Hexadecimal");
-    m_offset_type_box->set_model(GUI::ItemListModel<DeprecatedString>::create(m_offset_type));
+    m_offset_type.append("Decimal"_short_string);
+    m_offset_type.append("Hexadecimal"_string.release_value_but_fixme_should_propagate_errors());
+    m_offset_type_box->set_model(GUI::ItemListModel<String>::create(m_offset_type));
     m_offset_type_box->set_selected_index(0);
     m_offset_type_box->set_only_allow_values_from_model(true);
 
-    m_offset_from.append("Start");
-    m_offset_from.append("Here");
-    m_offset_from.append("End");
-    m_offset_from_box->set_model(GUI::ItemListModel<DeprecatedString>::create(m_offset_from));
+    m_offset_from.append("Start"_short_string);
+    m_offset_from.append("Here"_short_string);
+    m_offset_from.append("End"_short_string);
+    m_offset_from_box->set_model(GUI::ItemListModel<String>::create(m_offset_from));
     m_offset_from_box->set_selected_index(0);
     m_offset_from_box->set_only_allow_values_from_model(true);
 

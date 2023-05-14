@@ -33,6 +33,7 @@ private:
 
     RefPtr<GUI::Widget> m_properties_widget;
     Selection::MergeMode m_merge_mode { Selection::MergeMode::Set };
+    Vector<String> m_merge_mode_names;
     bool m_selecting { false };
     Gfx::IntPoint m_last_selecting_cursor_position;
     Vector<Gfx::IntPoint> m_polygon_points {};

@@ -71,7 +71,7 @@ private:
     NonnullRefPtr<FileSystemModel> m_model;
     DeprecatedString m_selected_file;
 
-    Vector<DeprecatedString> m_allowed_file_types_names;
+    Vector<String> m_allowed_file_types_names;
     Optional<Vector<FileTypeFilter>> m_allowed_file_types;
 
     RefPtr<GUI::Label> m_error_label;
