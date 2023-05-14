@@ -28,7 +28,7 @@ DeprecatedString Shortcut::to_deprecated_string() const
         parts.append("Super");
 
     if (m_type == Type::Keyboard) {
-        if (auto* key_name = key_code_to_string(m_keyboard_key))
+        if (auto key_name = key_code_to_string(m_keyboard_key); !key_name.is_null())
             parts.append(key_name);
         else
             parts.append("(Invalid)");

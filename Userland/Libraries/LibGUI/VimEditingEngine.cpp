@@ -132,9 +132,9 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
 
         // HACK: there is no good way to obtain whether a character is alphanumeric
         // from the keycode itself.
-        char const* keycode_str = key_code_to_string(key);
+        auto keycode_str = key_code_to_string(key);
 
-        if (strlen(keycode_str) == 1 && (isalpha(keycode_str[0]) || isspace(keycode_str[0]))) {
+        if (keycode_str.length() == 1 && (isalpha(keycode_str[0]) || isspace(keycode_str[0]))) {
             m_next_character = tolower(keycode_str[0]);
             m_unit = Unit::Find;
         } else {

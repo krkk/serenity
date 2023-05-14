@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <AK/Types.h>
 
 #define ENUMERATE_KEY_CODES                          \
@@ -155,16 +156,16 @@ struct KeyEvent {
     bool is_press() const { return flags & Is_Press; }
 };
 
-inline char const* key_code_to_string(KeyCode key)
+inline StringView key_code_to_string(KeyCode key)
 {
     switch (key) {
 #define __ENUMERATE_KEY_CODE(name, ui_name) \
     case Key_##name:                        \
-        return ui_name;
+        return ui_name##sv;
         ENUMERATE_KEY_CODES
 #undef __ENUMERATE_KEY_CODE
     default:
-        return nullptr;
+        return {};
     }
 }
 

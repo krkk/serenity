@@ -33,7 +33,7 @@ DeprecatedString KeyEvent::to_deprecated_string() const
     if (m_modifiers & Mod_Super)
         parts.append("Super");
 
-    if (auto* key_name = key_code_to_string(static_cast<KeyCode>(m_key)))
+    if (auto key_name = key_code_to_string(static_cast<KeyCode>(m_key)); !key_name.is_null())
         parts.append(key_name);
     else
         parts.append("(Invalid)");
