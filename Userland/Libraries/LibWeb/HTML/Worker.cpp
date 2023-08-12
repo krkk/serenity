@@ -25,6 +25,7 @@ Worker::Worker(String const& script_url, WorkerOptions const options, DOM::Docum
     , m_worker_vm(JS::VM::create(adopt_own(m_custom_data)).release_value_but_fixme_should_propagate_errors())
     , m_implicit_port(MessagePort::create(document.realm()).release_value_but_fixme_should_propagate_errors())
 {
+    m_custom_data.event_loop.set_vm(m_worker_vm);
 }
 
 void Worker::initialize(JS::Realm& realm)
