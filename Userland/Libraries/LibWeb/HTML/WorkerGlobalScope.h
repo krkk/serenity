@@ -63,6 +63,8 @@ public:
     AK::URL const& url() const { return m_url.value(); }
     void set_url(AK::URL const& url) { m_url = url; }
 
+    PolicyContainer policy_container() const { return m_policy_container; }
+
     // Spec note: While the WorkerLocation object is created after the WorkerGlobalScope object,
     //            this is not problematic as it cannot be observed from script.
     void set_location(JS::NonnullGCPtr<WorkerLocation> loc) { m_location = move(loc); }
@@ -101,6 +103,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-policy-container
     // A WorkerGlobalScope object has an associated policy container (a policy container). It is initially a new policy container.
+    PolicyContainer m_policy_container;
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-embedder-policy
     // A WorkerGlobalScope object has an associated embedder policy (an embedder policy).
