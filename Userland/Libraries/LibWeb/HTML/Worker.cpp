@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Worker.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
@@ -64,7 +65,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& scrip
     // Technically not a fixme if our policy is not to throw errors :^)
 
     // 2. Let outside settings be the current settings object.
-    auto& outside_settings = document.relevant_settings_object();
+    auto& outside_settings = current_settings_object();
 
     // 3. Parse the scriptURL argument relative to outside settings.
     auto url = document.parse_url(script_url.to_deprecated_string());
@@ -179,7 +180,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
-    m_inner_settings = WorkerEnvironmentSettingsObject::setup(move(realm_execution_context));
+    m_inner_settings = WorkerEnvironmentSettingsObject::setup(move(realm_execution_context), outside_settings).release_value_but_fixme_should_propagate_errors();
 
     // 10. Set worker global scope's name to the value of options's name member.
     // FIXME: name property requires the SharedWorkerGlobalScope or DedicatedWorkerGlobalScope child class to be used

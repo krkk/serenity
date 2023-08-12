@@ -64,17 +64,18 @@ public:
     void set_url(AK::URL const& url) { m_url = url; }
 
     PolicyContainer policy_container() const { return m_policy_container; }
+    bool cross_origin_isolated_capability() const { return m_cross_origin_isolated_capability; }
 
     // Spec note: While the WorkerLocation object is created after the WorkerGlobalScope object,
     //            this is not problematic as it cannot be observed from script.
     void set_location(JS::NonnullGCPtr<WorkerLocation> loc) { m_location = move(loc); }
 
+    WebIDL::ExceptionOr<void> initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>);
+
 protected:
     explicit WorkerGlobalScope(JS::Realm&);
 
 private:
-    virtual void initialize(JS::Realm&) override;
-
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<WorkerLocation> m_location;

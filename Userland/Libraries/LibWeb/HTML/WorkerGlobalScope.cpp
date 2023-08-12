@@ -6,6 +6,7 @@
 
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/WorkerGlobalScopePrototype.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -24,10 +25,15 @@ WorkerGlobalScope::WorkerGlobalScope(JS::Realm& realm)
 
 WorkerGlobalScope::~WorkerGlobalScope() = default;
 
-void WorkerGlobalScope::initialize(JS::Realm& realm)
+WebIDL::ExceptionOr<void> WorkerGlobalScope::initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>)
 {
-    Base::initialize(realm);
-    m_navigator = MUST(WorkerNavigator::create(*this));
+    auto& realm = this->realm();
+
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerGlobalScopePrototype>(realm, "WorkerGlobalScope"));
+    WindowOrWorkerGlobalScopeMixin::initialize(realm);
+
+    m_navigator = TRY(WorkerNavigator::create(*this));
+    return {};
 }
 
 void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)

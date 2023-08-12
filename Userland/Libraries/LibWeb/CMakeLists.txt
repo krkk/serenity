@@ -368,6 +368,7 @@ set(SOURCES
     HTML/Scripting/Script.cpp
     HTML/Scripting/TemporaryExecutionContext.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
+    HTML/Scripting/WorkerEnvironmentSettingsObject.cpp
     HTML/SessionHistoryEntry.cpp
     HTML/SharedImageRequest.cpp
     HTML/SourceSet.cpp
