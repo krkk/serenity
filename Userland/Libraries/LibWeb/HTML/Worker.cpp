@@ -202,7 +202,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     // classic: Fetch a classic worker script given url, outside settings, destination, and inside settings.
     // module:  Fetch a module worker script graph given url, outside settings, destination, the value of the
     //          credentials member of options, and inside settings.
-    if (options.type != "classic") {
+    if (options.type != Bindings::WorkerType::Classic) {
         dbgln_if(WEB_WORKER_DEBUG, "Unsupported script type {} for LibWeb/Worker", options.type);
         TODO();
     }

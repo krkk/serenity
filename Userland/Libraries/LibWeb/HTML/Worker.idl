@@ -1,7 +1,9 @@
 #import <DOM/EventTarget.idl>
 #import <DOM/EventHandler.idl>
+#import <Fetch/Request.idl>
 
-[Exposed=(Window), UseNewAKString]
+// https://html.spec.whatwg.org/multipage/workers.html#worker
+[Exposed=(Window,DedicatedWorker,SharedWorker), UseNewAKString]
 interface Worker : EventTarget {
     constructor(DOMString scriptURL, optional WorkerOptions options = {});
 
@@ -13,7 +15,9 @@ interface Worker : EventTarget {
 };
 
 dictionary WorkerOptions {
-    USVString type = "classic";
-    USVString credentials = "same-origin";
+    WorkerType type = "classic";
+    RequestCredentials credentials = "same-origin";
     DOMString name = "";
 };
+
+enum WorkerType { "classic", "module" };

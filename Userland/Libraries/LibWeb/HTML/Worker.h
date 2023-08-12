@@ -9,6 +9,7 @@
 #include <AK/RefCounted.h>
 #include <AK/URLParser.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/Bindings/WorkerPrototype.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/MessagePort.h>
@@ -25,8 +26,8 @@
 namespace Web::HTML {
 
 struct WorkerOptions {
-    String type { "classic"_string };
-    String credentials { "same-origin"_string };
+    Bindings::WorkerType type = Bindings::WorkerType::Classic;
+    Bindings::RequestCredentials credentials = Bindings::RequestCredentials::SameOrigin;
     String name { String {} };
 };
 
