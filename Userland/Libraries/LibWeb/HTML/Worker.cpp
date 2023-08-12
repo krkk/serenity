@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "LibWeb/Bindings/DedicatedWorkerExposedInterfaces.h"
 #include <AK/Debug.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/Realm.h>
@@ -14,6 +15,7 @@
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/Worker.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
+#include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
@@ -124,15 +126,15 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     auto realm_execution_context = Bindings::create_a_new_javascript_realm(
         *m_worker_vm,
         [&](JS::Realm& realm) -> JS::Object* {
-            //      7a. For the global object, if is shared is true, create a new SharedWorkerGlobalScope object.
-            //      7b. Otherwise, create a new DedicatedWorkerGlobalScope object.
+            // For the global object, if is shared is true, create a new SharedWorkerGlobalScope object.
+            // Otherwise, create a new DedicatedWorkerGlobalScope object.
             // FIXME: Proper support for both SharedWorkerGlobalScope and DedicatedWorkerGlobalScope
             if (is_shared)
                 TODO();
-            // FIXME: Make and use subclasses of WorkerGlobalScope, however this requires JS::GlobalObject to
-            //        play nicely with the IDL interpreter, to make spec-compliant extensions, which it currently does not.
-            m_worker_scope = m_worker_vm->heap().allocate_without_realm<JS::GlobalObject>(realm);
-            return m_worker_scope.ptr();
+            auto foo = realm.heap().allocate<WorkerGlobalScope>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+            // FIXME: Shared workers should use the shared worker method
+            Bindings::add_dedicated_worker_exposed_interfaces(foo);
+            return foo;
         },
         nullptr);
 
@@ -142,42 +144,8 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     m_console = adopt_ref(*new WorkerDebugConsoleClient(console_object.console()));
     console_object.console().set_client(*m_console);
 
-    // FIXME: This should be done with IDL
-    u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
-    m_worker_scope->define_native_function(
-        m_worker_scope->shape().realm(),
-        "postMessage",
-        [this](auto& vm) {
-            // This is the implementation of the function that the spawned worked calls
-
-            // https://html.spec.whatwg.org/multipage/workers.html#dom-dedicatedworkerglobalscope-postmessage
-            // The postMessage(message, transfer) and postMessage(message, options) methods on DedicatedWorkerGlobalScope
-            // objects act as if, when invoked, it immediately invoked the respective postMessage(message, transfer) and
-            // postMessage(message, options) on the port, with the same arguments, and returned the same return value
-
-            auto message = vm.argument(0);
-            // FIXME: `transfer` not support by post_message yet
-
-            dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Inner post_message");
-
-            // FIXME: This is a bit of a hack, in reality, we should m_outside_port->post_message and the onmessage event
-            //        should bubble up to the Worker itself from there.
-
-            auto& event_loop = get_vm_event_loop(m_document->realm().vm());
-
-            event_loop.task_queue().add(HTML::Task::create(HTML::Task::Source::PostedMessage, nullptr, [this, message] {
-                MessageEventInit event_init {};
-                event_init.data = message;
-                event_init.origin = "<origin>"_string;
-                dispatch_event(MessageEvent::create(*m_worker_realm, HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
-            }));
-
-            return JS::js_undefined();
-        },
-        2, attr);
-
     // 8. Let worker global scope be the global object of realm execution context's Realm component.
-    // NOTE: This is the DedicatedWorkerGlobalScope or SharedWorkerGlobalScope object created in the previous step.
+    m_worker_scope = verify_cast<WorkerGlobalScope>(realm_execution_context->realm->global_object());
 
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
@@ -223,7 +191,9 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
         // 5. Entangle outside port and inside port.
         outside_port.entangle_with(*inside_port);
 
-        // FIXME 6. Create a new WorkerLocation object and associate it with worker global scope.
+        // 6. Create a new WorkerLocation object and associate it with worker global scope.
+        auto location = m_worker_scope->heap().allocate<WorkerLocation>(m_worker_scope->realm(), *m_worker_scope).release_allocated_value_but_fixme_should_propagate_errors();
+        m_worker_scope->set_location(location);
 
         // 7. Closing orphan workers: Start monitoring the worker such that no sooner than it
         //    stops being a protected worker, and no later than it stops being a permissible worker,
