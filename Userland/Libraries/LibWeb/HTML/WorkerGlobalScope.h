@@ -60,7 +60,7 @@ public:
 
     // Non-IDL public methods
 
-    AK::URL const& url() const { return m_url.value(); }
+    AK::URL const& url() const { return m_url; }
     void set_url(AK::URL const& url) { m_url = url; }
 
     PolicyContainer policy_container() const { return m_policy_container; }
@@ -92,7 +92,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-url
     // A WorkerGlobalScope object has an associated url (null or a URL). It is initially null.
-    Optional<AK::URL> m_url;
+    AK::URL m_url;
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-name
     // A WorkerGlobalScope object has an associated name (a string). It is set during creation.
