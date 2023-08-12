@@ -72,6 +72,7 @@ WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(DeprecatedString co
 Optional<AK::URL> resolve_url_like_module_specifier(DeprecatedString const& specifier, AK::URL const& base_url);
 
 WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElement>, AK::URL const&, EnvironmentSettingsObject& settings_object, ScriptFetchOptions options, CORSSettingAttribute cors_setting, String character_encoding, OnFetchScriptComplete on_complete);
+WebIDL::ExceptionOr<void> fetch_classic_worker_script(JS::Realm&, AK::URL const& url, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination destination, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete);
 void fetch_internal_module_script_graph(JS::Realm&, JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, Fetch::Infrastructure::Request::Destination, ScriptFetchOptions const&, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, OnFetchScriptComplete on_complete);
 void fetch_external_module_script_graph(JS::Realm&, AK::URL const&, EnvironmentSettingsObject& settings_object, ScriptFetchOptions const&, OnFetchScriptComplete on_complete);
 void fetch_inline_module_script_graph(JS::Realm& realm, DeprecatedString const& filename, DeprecatedString const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete);

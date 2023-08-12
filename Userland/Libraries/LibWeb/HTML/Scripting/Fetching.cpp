@@ -12,6 +12,7 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
+#include <LibWeb/Fetch/Infrastructure/URL.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/PotentialCORSRequest.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -311,6 +312,69 @@ WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElemen
     };
 
     TRY(Fetch::Fetching::fetch(element->realm(), request, Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-classic-worker-script
+WebIDL::ExceptionOr<void> fetch_classic_worker_script(JS::Realm& realm, AK::URL const& url, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination destination, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete)
+{
+    auto& vm = realm.vm();
+
+    // 1. Let request be a new request whose URL is url, client is fetchClient, destination is destination, initiator type is "other", mode is "same-origin", credentials mode is "same-origin", parser metadata is "not parser-inserted", and whose use-URL-credentials flag is set.
+    auto request = Fetch::Infrastructure::Request::create(vm);
+    request->set_url(url);
+    request->set_client(&fetch_client);
+    request->set_destination(destination);
+    request->set_initiator_type(Fetch::Infrastructure::Request::InitiatorType::Other);
+    request->set_mode(Fetch::Infrastructure::Request::Mode::SameOrigin);
+    request->set_credentials_mode(Fetch::Infrastructure::Request::CredentialsMode::SameOrigin);
+    request->set_parser_metadata(Fetch::Infrastructure::Request::ParserMetadata::NotParserInserted);
+    request->set_use_url_credentials(true);
+
+    // 2. If performFetch was given, run performFetch with request, true, and with processResponseConsumeBody as defined below.
+    //    Otherwise, fetch request with processResponseConsumeBody set to processResponseConsumeBody as defined below.
+    //    In both cases, let processResponseConsumeBody given response response and null, failure, or a byte sequence bodyBytes be the following algorithm:
+    // FIXME: Run performFetch if given.
+    Fetch::Infrastructure::FetchAlgorithms::Input fetch_algorithms_input {};
+    fetch_algorithms_input.process_response_consume_body = [&settings_object, on_complete = move(on_complete)](JS::NonnullGCPtr<Fetch::Infrastructure::Response> response, Fetch::Infrastructure::FetchAlgorithms::BodyBytes body_bytes) {
+        // 1. Set response to response's unsafe response.
+        response = response->unsafe_response();
+
+        // 2. If either of the following conditions are met:
+        //    - bodyBytes is null or failure; or
+        //    - response's status is not an ok status,
+        if (body_bytes.has<Empty>() || body_bytes.has<Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag>() || !Fetch::Infrastructure::is_ok_status(response->status())) {
+            // then run onComplete given null, and abort these steps.
+            on_complete(nullptr);
+            return;
+        }
+
+        // 3. If both of the following conditions are met:
+        //    - response's URL's scheme is an HTTP(S) scheme; and
+        //    - the result of extracting a MIME type from response's header list is not a JavaScript MIME type,
+        auto response_url = response->url();
+        VERIFY(response_url.has_value());
+        auto mime_type = response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+        if (Fetch::Infrastructure::is_http_or_https_scheme(response_url->scheme()) && !mime_type->is_javascript()) {
+            // then run onComplete given null, and abort these steps.
+            on_complete(nullptr);
+            return;
+        }
+
+        // 4. Let sourceText be the result of UTF-8 decoding bodyBytes.
+        auto decoder = TextCodec::decoder_for("UTF-8"sv);
+        VERIFY(decoder.has_value());
+        auto source_text = TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, body_bytes.get<ByteBuffer>()).release_value_but_fixme_should_propagate_errors();
+
+        // 5. Let script be the result of creating a classic script using sourceText, settingsObject, response's URL, and the default classic script fetch options.
+        // FIXME: Pass fetch options.
+        auto script = ClassicScript::create(response_url->to_deprecated_string(), source_text, settings_object, *response_url);
+
+        // 6. Run onComplete given script.
+        on_complete(script);
+    };
+
+    TRY(Fetch::Fetching::fetch(realm, request, Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));
     return {};
 }
 

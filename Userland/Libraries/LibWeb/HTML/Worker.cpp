@@ -9,7 +9,9 @@
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/Worker.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -101,7 +103,6 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     // 1. Let is shared be true if worker is a SharedWorker object, and false otherwise.
     // FIXME: SharedWorker support
     auto is_shared = false;
-    auto is_top_level = false;
 
     // 2. Let owner be the relevant owner to add given outside settings.
     // FIXME: Support WorkerGlobalScope options
@@ -198,123 +199,95 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     }
 
     // 13. Let destination be "sharedworker" if is shared is true, and "worker" otherwise.
+    auto destination = is_shared ? Fetch::Infrastructure::Request::Destination::SharedWorker : Fetch::Infrastructure::Request::Destination::Worker;
 
     // 14. Obtain script by switching on the value of options's type member:
-    // classic: Fetch a classic worker script given url, outside settings, destination, and inside settings.
-    // module:  Fetch a module worker script graph given url, outside settings, destination, the value of the
-    //          credentials member of options, and inside settings.
-    if (options.type != Bindings::WorkerType::Classic) {
+    //     In both cases, let performFetch be the following perform the fetch hook given request, isTopLevel and processCustomFetchResponse:
+    //     In both cases, let onComplete given script be the following steps:
+    // FIXME: Perform steps with performFetch.
+    OnFetchScriptComplete on_complete = [this, is_shared, &outside_port](JS::GCPtr<Script> script) {
+        // 1. If script is null or if script's error to rethrow is non-null, then:
+        if (!script || !script->error_to_rethrow().is_null()) {
+            TODO();
+        }
+
+        // 2. Associate worker with worker global scope.
+
+        // 3. Let inside port be a new MessagePort object in inside settings's realm.
+        auto inside_port = MessagePort::create(m_inner_settings->realm()).release_value_but_fixme_should_propagate_errors();
+
+        // 4. Associate inside port with worker global scope.
+
+        // FIXME: Global scope association
+
+        // 5. Entangle outside port and inside port.
+        outside_port.entangle_with(*inside_port);
+
+        // FIXME 6. Create a new WorkerLocation object and associate it with worker global scope.
+
+        // 7. Closing orphan workers: Start monitoring the worker such that no sooner than it
+        //    stops being a protected worker, and no later than it stops being a permissible worker,
+        //    worker global scope's closing flag is set to true.
+        // FIXME: Worker monitoring and cleanup
+
+        // 8. Suspending workers: Start monitoring the worker, such that whenever worker global scope's
+        //    closing flag is false and the worker is a suspendable worker, the user agent suspends
+        //    execution of script in that worker until such time as either the closing flag switches to
+        //    true or the worker stops being a suspendable worker
+        // FIXME: Worker suspending
+
+        // 9. Set inside settings's execution ready flag.
+        m_inner_settings->execution_ready = true;
+
+        // 10. If script is a classic script, then run the classic script script.
+        //     Otherwise, it is a module script; run the module script script.
+        if (is<ClassicScript>(*script)) {
+            auto result = verify_cast<ClassicScript>(*script).run();
+        } else if (is<JavaScriptModuleScript>(*script)) {
+            verify_cast<JavaScriptModuleScript>(*script).run();
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+
+        // 11. Enable outside port's port message queue.
+        outside_port.start();
+
+        // 12. If is shared is false, enable the port message queue of the worker's implicit port.
+        if (!is_shared)
+            m_implicit_port->start();
+
+        // 13. If is shared is true, then queue a global task on DOM manipulation task source given worker
+        //     global scope to fire an event named connect at worker global scope, using MessageEvent,
+        //     with the data attribute initialized to the empty string, the ports attribute initialized
+        //     to a new frozen array containing inside port, and the source attribute initialized to inside port.
+        // FIXME: Shared worker support
+
+        // 14. Enable the client message queue of the ServiceWorkerContainer object whose associated service
+        //     worker client is worker global scope's relevant settings object.
+        // FIXME: Understand....and support worker global settings
+
+        // 15. Event loop: Run the responsible event loop specified by inside settings until it is destroyed.
+
+        // 16. Clear the worker global scope's map of active timers.
+
+        // 17. Disentangle all the ports in the list of the worker's ports.
+
+        // 18. Empty worker global scope's owner set.
+    };
+
+    switch (options.type) {
+    // -> "classic"
+    case Bindings::WorkerType::Classic:
+        // Fetch a classic worker script given url, outside settings, destination, and inside settings.
+        fetch_classic_worker_script(realm(), url, outside_settings, destination, *m_inner_settings, move(on_complete)).release_value_but_fixme_should_propagate_errors();
+
+    // -> "module"
+    case Bindings::WorkerType::Module:
+        // Fetch a module worker script graph given url, outside settings, destination, the value of the
+        // credentials member of options, and inside settings.
         dbgln_if(WEB_WORKER_DEBUG, "Unsupported script type {} for LibWeb/Worker", options.type);
         TODO();
     }
-
-    ResourceLoader::the().load(
-        url,
-        [this, is_shared, is_top_level, url, &outside_port](auto data, auto&, auto) {
-            // In both cases, to perform the fetch given request, perform the following steps if the is top-level flag is set:
-            if (is_top_level) {
-                // 1. Set request's reserved client to inside settings.
-
-                // 2. Fetch request, and asynchronously wait to run the remaining steps
-                //    as part of fetch's process response for the response response.
-                // Implied
-
-                // 3. Set worker global scope's url to response's url.
-
-                // 4. Initialize worker global scope's policy container given worker global scope, response, and inside settings.
-                // FIXME: implement policy container
-
-                // 5. If the Run CSP initialization for a global object algorithm returns "Blocked" when executed upon worker
-                //    global scope, set response to a network error. [CSP]
-                // FIXME: CSP support
-
-                // 6. If worker global scope's embedder policy's value is compatible with cross-origin isolation and is shared is true,
-                //    then set agent's agent cluster's cross-origin isolation mode to "logical" or "concrete".
-                //    The one chosen is implementation-defined.
-                // FIXME: CORS policy support
-
-                // 7. If the result of checking a global object's embedder policy with worker global scope, outside settings,
-                //    and response is false, then set response to a network error.
-                // FIXME: Embed policy support
-
-                // 8. Set worker global scope's cross-origin isolated capability to true if agent's agent cluster's cross-origin
-                //    isolation mode is "concrete".
-                // FIXME: CORS policy support
-
-                if (!is_shared) {
-                    // 9.  If is shared is false and owner's cross-origin isolated capability is false, then set worker
-                    //     global scope's cross-origin isolated capability to false.
-                    // 10. If is shared is false and response's url's scheme is "data", then set worker global scope's
-                    //     cross-origin isolated capability to false.
-                }
-            }
-
-            if (data.is_null()) {
-                dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Failed to load {}", url);
-                return;
-            }
-
-            // Asynchronously complete the perform the fetch steps with response.
-            dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Script ready!");
-            auto script = ClassicScript::create(url.to_deprecated_string(), data, *m_inner_settings, AK::URL());
-
-            // NOTE: Steps 15-31 below pick up after step 14 in the main context, steps 1-10 above
-            //       are only for validation when used in a top-level case (ie: from a Window)
-
-            // 15. Associate worker with worker global scope.
-            // FIXME: Global scope association
-
-            // 16. Let inside port be a new MessagePort object in inside settings's Realm.
-            auto inside_port = MessagePort::create(m_inner_settings->realm()).release_value_but_fixme_should_propagate_errors();
-
-            // 17. Associate inside port with worker global scope.
-            // FIXME: Global scope association
-
-            // 18. Entangle outside port and inside port.
-            outside_port.entangle_with(*inside_port);
-
-            // 19. Create a new WorkerLocation object and associate it with worker global scope.
-
-            // 20. Closing orphan workers: Start monitoring the worker such that no sooner than it
-            //     stops being a protected worker, and no later than it stops being a permissible worker,
-            //     worker global scope's closing flag is set to true.
-            // FIXME: Worker monitoring and cleanup
-
-            // 21. Suspending workers: Start monitoring the worker, such that whenever worker global scope's
-            //     closing flag is false and the worker is a suspendable worker, the user agent suspends
-            //     execution of script in that worker until such time as either the closing flag switches to
-            //     true or the worker stops being a suspendable worker
-            // FIXME: Worker suspending
-
-            // 22. Set inside settings's execution ready flag.
-            // FIXME: Implement worker settings object
-
-            // 23. If script is a classic script, then run the classic script script.
-            //     Otherwise, it is a module script; run the module script script.
-            auto result = script->run();
-
-            // 24. Enable outside port's port message queue.
-            outside_port.start();
-
-            // 25. If is shared is false, enable the port message queue of the worker's implicit port.
-            if (!is_shared)
-                m_implicit_port->start();
-
-            // 26. If is shared is true, then queue a global task on DOM manipulation task source given worker
-            //     global scope to fire an event named connect at worker global scope, using MessageEvent,
-            //     with the data attribute initialized to the empty string, the ports attribute initialized
-            //     to a new frozen array containing inside port, and the source attribute initialized to inside port.
-            // FIXME: Shared worker support
-
-            // 27. Enable the client message queue of the ServiceWorkerContainer object whose associated service
-            //     worker client is worker global scope's relevant settings object.
-            // FIXME: Understand....and support worker global settings
-
-            // 28. Event loop: Run the responsible event loop specified by inside settings until it is destroyed.
-        },
-        [](auto&, auto) {
-            dbgln_if(WEB_WORKER_DEBUG, "WebWorker: HONK! Failed to load script.");
-        });
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate
