@@ -70,7 +70,7 @@ public:
     //            this is not problematic as it cannot be observed from script.
     void set_location(JS::NonnullGCPtr<WorkerLocation> loc) { m_location = move(loc); }
 
-    WebIDL::ExceptionOr<void> initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>);
+    virtual void initialize_web_interfaces();
 
 protected:
     explicit WorkerGlobalScope(JS::Realm&);

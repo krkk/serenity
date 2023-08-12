@@ -314,6 +314,7 @@ class CloseEvent;
 class CustomElementDefinition;
 class CustomElementRegistry;
 class DecodedImageData;
+class DedicatedWorkerGlobalScope;
 class DocumentState;
 class DOMParser;
 class DOMStringMap;

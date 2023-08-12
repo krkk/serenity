@@ -8,7 +8,7 @@
 #include "WorkerEnvironmentSettingsObject.h"
 #include <LibWeb/Bindings/DedicatedWorkerExposedInterfaces.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/HTML/WorkerGlobalScope.h>
+#include <LibWeb/HTML/DedicatedWorkerGlobalScope.h>
 
 namespace Web::HTML {
 
@@ -38,11 +38,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WorkerEnvironmentSettingsObject>> WorkerEnv
     settings_object->target_browsing_context = nullptr;
 
     // 6. If worker global scope is a DedicatedWorkerGlobalScope object, then set settings object's top-level origin to outside settings's top-level origin.
-    if (true) {
+    if (is<DedicatedWorkerGlobalScope>(worker_global_scope)) {
         settings_object->top_level_origin = outside_settings.top_level_origin;
     }
     // FIXME: 7. Otherwise, set settings object's top-level origin to an implementation-defined value.
     else {
+        TODO();
     }
 
     // 8. Set realm's [[HostDefined]] field to settings object.
@@ -53,7 +54,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WorkerEnvironmentSettingsObject>> WorkerEnv
 
     // Non-Standard: We cannot fully initialize WorkerGlobalScope object until *after* the we set up
     //    the realm's [[HostDefined]] internal slot as the internal slot contains the web platform intrinsics
-    TRY(worker_global_scope.initialize_web_interfaces({}));
+    worker_global_scope.initialize_web_interfaces();
 
     // 9. Return settings object.
     return settings_object;

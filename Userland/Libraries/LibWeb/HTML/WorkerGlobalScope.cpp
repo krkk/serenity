@@ -25,15 +25,14 @@ WorkerGlobalScope::WorkerGlobalScope(JS::Realm& realm)
 
 WorkerGlobalScope::~WorkerGlobalScope() = default;
 
-WebIDL::ExceptionOr<void> WorkerGlobalScope::initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>)
+void WorkerGlobalScope::initialize_web_interfaces()
 {
     auto& realm = this->realm();
 
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerGlobalScopePrototype>(realm, "WorkerGlobalScope"));
     WindowOrWorkerGlobalScopeMixin::initialize(realm);
 
-    m_navigator = TRY(WorkerNavigator::create(*this));
-    return {};
+    m_navigator = WorkerNavigator::create(*this).release_value_but_fixme_should_propagate_errors();
 }
 
 void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)

@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "LibWeb/Bindings/DedicatedWorkerExposedInterfaces.h"
 #include <AK/Debug.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/Realm.h>
+#include <LibWeb/Bindings/DedicatedWorkerExposedInterfaces.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
+#include <LibWeb/HTML/DedicatedWorkerGlobalScope.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/Worker.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
-#include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
@@ -131,7 +131,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
             // FIXME: Proper support for both SharedWorkerGlobalScope and DedicatedWorkerGlobalScope
             if (is_shared)
                 TODO();
-            auto foo = realm.heap().allocate<WorkerGlobalScope>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+            auto foo = realm.heap().allocate<DedicatedWorkerGlobalScope>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
             // FIXME: Shared workers should use the shared worker method
             Bindings::add_dedicated_worker_exposed_interfaces(foo);
             return foo;
