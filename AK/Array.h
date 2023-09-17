@@ -137,6 +137,12 @@ struct Array {
     Conditional<Size == 0, Detail::EmptyArrayStorage<T>, T[Size]> __data;
 };
 
+template<typename T, size_t N>
+requires(Traits<T>::is_trivially_serializable())
+struct Traits<Array<T, N>> : public DefaultTraits<T> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
 template<typename T, typename... Types>
 Array(T, Types...) -> Array<T, sizeof...(Types) + 1>;
 
