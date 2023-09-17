@@ -1,6 +1,7 @@
 set(SOURCES
     GenericTypes.cpp
     SampleFormats.cpp
+    ID3.cpp
     Loader.cpp
     RIFFTypes.cpp
     WavLoader.cpp
@@ -36,7 +37,7 @@ if (HAVE_PULSEAUDIO)
 endif()
 
 serenity_lib(LibAudio audio)
-target_link_libraries(LibAudio PRIVATE LibCore LibIPC LibThreading LibUnicode LibCrypto)
+target_link_libraries(LibAudio PRIVATE LibCore LibIPC LibThreading LibUnicode LibCompress LibCrypto LibTextCodec)
 
 if (HAVE_PULSEAUDIO)
     target_link_libraries(LibAudio PRIVATE pulse)

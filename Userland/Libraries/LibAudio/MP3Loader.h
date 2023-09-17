@@ -41,7 +41,6 @@ public:
 
 private:
     MaybeLoaderError initialize();
-    static MaybeLoaderError skip_id3(SeekableStream& stream);
     static MaybeLoaderError synchronize(SeekableStream& stream, size_t sample_index);
     static ErrorOr<MP3::Header, LoaderError> read_header(SeekableStream& stream, size_t sample_index);
     static ErrorOr<MP3::Header, LoaderError> synchronize_and_read_header(SeekableStream& stream, size_t sample_index);

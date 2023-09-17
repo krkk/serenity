@@ -5,6 +5,7 @@
  */
 
 #include "MP3Loader.h"
+#include "ID3.h"
 #include "MP3HuffmanTables.h"
 #include "MP3Tables.h"
 #include "MP3Types.h"
@@ -22,34 +23,10 @@ MP3LoaderPlugin::MP3LoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 {
 }
 
-MaybeLoaderError MP3LoaderPlugin::skip_id3(SeekableStream& stream)
-{
-    // FIXME: This is a bit of a hack until we have a proper ID3 reader and MP3 demuxer.
-    // Based on https://mutagen-specs.readthedocs.io/en/latest/id3/id3v2.2.html
-    char identifier_buffer[3] = { 0, 0, 0 };
-    auto read_identifier = StringView(TRY(stream.read_some({ &identifier_buffer[0], sizeof(identifier_buffer) })));
-    if (read_identifier == "ID3"sv) {
-        [[maybe_unused]] auto version = TRY(stream.read_value<u8>());
-        [[maybe_unused]] auto revision = TRY(stream.read_value<u8>());
-        [[maybe_unused]] auto flags = TRY(stream.read_value<u8>());
-        auto size = 0;
-        for (auto i = 0; i < 4; i++) {
-            // Each byte has a zeroed most significant bit to prevent it from looking like a sync code.
-            auto byte = TRY(stream.read_value<u8>());
-            size <<= 7;
-            size |= byte & 0x7F;
-        }
-        TRY(stream.seek(size, SeekMode::FromCurrentPosition));
-    } else if (read_identifier != "TAG"sv) {
-        MUST(stream.seek(-static_cast<int>(read_identifier.length()), SeekMode::FromCurrentPosition));
-    }
-    return {};
-}
-
 bool MP3LoaderPlugin::sniff(SeekableStream& stream)
 {
-    auto skip_id3_result = skip_id3(stream);
-    if (skip_id3_result.is_error())
+    auto id3_result = skip_id3(stream);
+    if (id3_result.is_error())
         return false;
     return !synchronize_and_read_header(stream, 0).is_error();
 }
@@ -137,7 +114,9 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> MP3LoaderPlugin::load_chunks(si
 MaybeLoaderError MP3LoaderPlugin::build_seek_table()
 {
     VERIFY(MUST(m_stream->tell()) == 0);
-    TRY(skip_id3(*m_stream));
+    auto id3_result = TRY(read_id3_metadata(*m_stream));
+    if (id3_result.has_value())
+        m_metadata = id3_result.release_value();
 
     int sample_count = 0;
     size_t frame_count = 0;
