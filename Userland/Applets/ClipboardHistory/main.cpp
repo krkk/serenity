@@ -6,6 +6,7 @@
 
 #include "ClipboardHistoryModel.h"
 #include <LibConfig/Client.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/Directory.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>

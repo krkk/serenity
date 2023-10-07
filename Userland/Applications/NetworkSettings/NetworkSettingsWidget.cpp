@@ -12,6 +12,7 @@
 #include <AK/JsonParser.h>
 #include <Applications/NetworkSettings/NetworkSettingsGML.h>
 #include <LibCore/Command.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/System.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>

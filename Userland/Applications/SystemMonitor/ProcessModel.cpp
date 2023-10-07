@@ -10,6 +10,7 @@
 #include <AK/JsonValue.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/NumberFormat.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>

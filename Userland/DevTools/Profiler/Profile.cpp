@@ -15,6 +15,7 @@
 #include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
 #include <AK/Try.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>

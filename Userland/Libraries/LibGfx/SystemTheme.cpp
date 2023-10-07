@@ -8,6 +8,7 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
+#include <LibCore/AnonymousBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibGfx/SystemTheme.h>

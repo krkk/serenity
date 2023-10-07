@@ -12,6 +12,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/MemoryStream.h>
 #include <Applications/Spreadsheet/CSVExportGML.h>
+#include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>

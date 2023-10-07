@@ -14,6 +14,7 @@
 #include <AK/Format.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/File.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Menu.h>

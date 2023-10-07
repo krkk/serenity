@@ -12,8 +12,7 @@
 #include <AK/Forward.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <LibCore/AnonymousBuffer.h>
-#include <LibCore/ConfigFile.h>
+#include <LibCore/Forward.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/TextAlignment.h>
 

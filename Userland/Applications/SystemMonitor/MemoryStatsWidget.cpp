@@ -10,6 +10,7 @@
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
 #include <LibCore/EventReceiver.h>
+#include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>

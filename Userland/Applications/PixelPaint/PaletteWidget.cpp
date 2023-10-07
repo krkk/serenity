@@ -11,6 +11,7 @@
 #include "ImageEditor.h"
 #include <AK/Result.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ColorPicker.h>
 #include <LibGUI/MessageBox.h>
