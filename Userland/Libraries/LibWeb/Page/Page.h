@@ -15,8 +15,8 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/API/KeyCode.h>
+#include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
-#include <LibGfx/Palette.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>

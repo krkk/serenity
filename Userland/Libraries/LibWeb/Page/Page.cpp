@@ -7,6 +7,7 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/SourceLocation.h>
+#include <LibGfx/Palette.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 #include <LibWeb/CSS/StyleComputer.h>
