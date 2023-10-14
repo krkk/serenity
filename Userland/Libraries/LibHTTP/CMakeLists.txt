@@ -2,6 +2,7 @@ set(SOURCES
     HttpRequest.cpp
     HttpResponse.cpp
     HttpsJob.cpp
+    HPack.cpp
     Job.cpp
 )
 
