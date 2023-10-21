@@ -10,7 +10,7 @@
 #include <LibHTTP/HPack.h>
 #include <LibHTTP/HPackHuffmanTables.h>
 
-namespace HTTP::HPack {
+namespace HTTP {
 
 static ErrorOr<u32> decode_hpack_integer(BigEndianInputBitStream& stream, u8 prefix_count)
 {
@@ -38,6 +38,28 @@ static ErrorOr<u32> decode_hpack_integer(BigEndianInputBitStream& stream, u8 pre
     }
 }
 
+static ErrorOr<void> encode_hpack_integer(BigEndianOutputBitStream& stream, u32 value, u8 prefix_count)
+{
+    // 5.1. Integer Representation
+    u8 set_whole_prefix = (1 << prefix_count) - 1;
+    if (value < set_whole_prefix) {
+        TRY(stream.write_bits(value, prefix_count));
+        VERIFY(stream.bit_offset() % 8 == 0);
+        return {};
+    }
+
+    TRY(stream.write_bits(set_whole_prefix, prefix_count));
+    VERIFY(stream.bit_offset() % 8 == 0);
+    value -= set_whole_prefix;
+
+    while (value >= 0b1000'0000) {
+        TRY(stream.write_value<u8>(0b1000'0000 | value & 0b0111'1111));
+        value >>= 7;
+    }
+    TRY(stream.write_value<u8>(value));
+    return {};
+}
+
 static ErrorOr<String> decode_hpack_string(BigEndianInputBitStream& stream)
 {
     // 5.2. String Literal Representation
@@ -56,7 +78,7 @@ static ErrorOr<String> decode_hpack_string(BigEndianInputBitStream& stream)
         auto bit_length = (u256)length * 8;
         StringBuilder decoded;
         while (true) {
-            auto result = huffman_decode(huffman_bitstream, Tree.span(), bit_length > 30 ? 30 : (size_t)bit_length);
+            auto result = huffman_decode(huffman_bitstream, Huffman::Tree.span(), bit_length > 30 ? 30 : (size_t)bit_length);
             bit_length -= result.bits_read;
             // Upon decoding, an incomplete code at the end of the encoded data is to be considered as padding and discarded.
             if (!result.code.has_value() && bit_length == 0)
@@ -71,11 +93,23 @@ static ErrorOr<String> decode_hpack_string(BigEndianInputBitStream& stream)
     return String::from_utf8(string_data);
 }
 
-Decoder Decoder::create_with_http2_table(u32 max_dynamic_table_size)
+static ErrorOr<void> encode_hpack_string(BigEndianOutputBitStream& stream, StringView string)
+{
+    // 5.2. String Literal Representation
+    VERIFY(stream.bit_offset() % 8 == 0);
+
+    // FIXME: Support encoding huffman strings.
+    TRY(stream.write_bits(0u, 1));
+    TRY(encode_hpack_integer(stream, string.length(), 7));
+
+    return stream.write_until_depleted(string.bytes());
+}
+
+HPack HPack::create_with_http2_table(u32 max_dynamic_table_size)
 {
     // clang-format off
     // https://httpwg.org/specs/rfc7541.html#static.table.entries
-    Vector<Header> http2_table {
+    Vector<HPackHeader> http2_table {
         { ":authority"_string,                  {} },
         { ":method"_string,                     "GET"_string },
         { ":method"_string,                     "POST"_string },
@@ -140,10 +174,10 @@ Decoder Decoder::create_with_http2_table(u32 max_dynamic_table_size)
     };
     // clang-format on
 
-    return Decoder(move(http2_table), max_dynamic_table_size);
+    return HPack(move(http2_table), max_dynamic_table_size);
 }
 
-ErrorOr<Header> Decoder::table_at(u32 index) const
+ErrorOr<HPackHeader> HPack::table_at(u32 index) const
 {
     // 2.3.3. Index Address Space
     VERIFY(index != 0);
@@ -163,11 +197,11 @@ ErrorOr<Header> Decoder::table_at(u32 index) const
     return Error::from_string_literal("invalid index");
 }
 
-ErrorOr<Vector<Header>> Decoder::decode(NonnullOwnPtr<Stream> stream)
+ErrorOr<Vector<HPackHeader>> HPack::decode(NonnullOwnPtr<Stream> stream)
 {
     BigEndianInputBitStream bit_stream(move(stream));
 
-    Vector<Header> headers;
+    Vector<HPackHeader> headers;
 
     while (!bit_stream.is_eof()) {
         // 6.1. Indexed Header Field Representation
@@ -254,6 +288,18 @@ ErrorOr<Vector<Header>> Decoder::decode(NonnullOwnPtr<Stream> stream)
     return headers;
 }
 
+ErrorOr<void> HPack::encode(Stream& stream, Span<HPackHeader> headers)
+{
+    BigEndianOutputBitStream bit_stream(MaybeOwned<Stream> { stream });
+
+    for (auto const& header : headers) {
+        TRY(bit_stream.write_value<u8>(0b0000'0000));
+        TRY(encode_hpack_string(bit_stream, header.name));
+        TRY(encode_hpack_string(bit_stream, header.value));
+    }
+    return {};
+}
+
 size_t Details::DynamicTable::table_size() const
 {
     // 4.1. Calculating Table Size
@@ -277,7 +323,7 @@ void Details::DynamicTable::resize(u32 new_byte_size)
     m_max_size = new_byte_size;
 }
 
-void Details::DynamicTable::insert(Header&& entry)
+void Details::DynamicTable::insert(HPackHeader&& entry)
 {
     // 4.4. Entry Eviction When Adding New Entries
     //      Before a new entry is added to the dynamic table, entries are evicted from the end of the dynamic table
@@ -298,7 +344,7 @@ void Details::DynamicTable::insert(Header&& entry)
         m_table.prepend(move(entry));
 }
 
-size_t Details::DynamicTable::entry_size(Header const& entry)
+size_t Details::DynamicTable::entry_size(HPackHeader const& entry)
 {
     // 4.1. Calculating Table Size
     //      [...]

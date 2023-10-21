@@ -11,7 +11,7 @@
 #include <AK/BitStream.h>
 #include <AK/Span.h>
 
-namespace HTTP::HPack {
+namespace HTTP::Huffman {
 
 template<typename Symbol>
 struct HuffmanEntry {

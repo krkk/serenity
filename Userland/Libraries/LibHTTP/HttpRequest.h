@@ -81,11 +81,11 @@ public:
     void set_body(ByteBuffer&& body) { m_body = move(body); }
 
     StringView method_name() const;
-    ErrorOr<ByteBuffer> to_raw_request() const;
+    ErrorOr<ByteBuffer> to_raw_request() const; // HTTP/1.1
 
     void set_headers(HashMap<DeprecatedString, DeprecatedString> const&);
 
-    static ErrorOr<HttpRequest, HttpRequest::ParseError> from_raw_request(ReadonlyBytes);
+    static ErrorOr<HttpRequest, HttpRequest::ParseError> from_raw_request(ReadonlyBytes); // HTTP/1.1
     static Optional<Header> get_http_basic_authentication_header(URL const&);
     static Optional<BasicAuthenticationCredentials> parse_http_basic_authentication_header(DeprecatedString const&);
 

@@ -637,6 +637,7 @@ if (BUILD_LAGOM)
             LibCrypto
             LibCompress
             LibGL
+            LibHTTP
             LibGfx
             LibIMAP
             LibLocale
