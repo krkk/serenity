@@ -48,8 +48,8 @@ ByteBuffer TLSv12::build_hello()
         alpn_negotiated_length = m_context.negotiated_alpn.length();
         alpn_length = alpn_negotiated_length + 1;
         extension_length += alpn_length + 6;
-    } else if (m_context.alpn.size()) {
-        for (auto& alpn : m_context.alpn) {
+    } else if (m_context.options.alpn_list.has_value()) {
+        for (auto& alpn : m_context.options.alpn_list.value()) {
             size_t length = alpn.length();
             alpn_length += length + 1;
         }

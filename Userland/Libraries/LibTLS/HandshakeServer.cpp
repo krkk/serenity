@@ -149,7 +149,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                 res += sni_name_length;
                 dbgln("SNI host_name: {}", m_context.extensions.SNI);
             }
-        } else if (extension_type == ExtensionType::APPLICATION_LAYER_PROTOCOL_NEGOTIATION && m_context.alpn.size()) {
+        } else if (extension_type == ExtensionType::APPLICATION_LAYER_PROTOCOL_NEGOTIATION && m_context.options.alpn_list.has_value()) {
             if (buffer.size() - res > 2) {
                 auto alpn_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
                 if (alpn_length && alpn_length <= extension_length - 2) {
@@ -160,7 +160,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                         if (alpn_size + alpn_position >= extension_length)
                             break;
                         DeprecatedString alpn_str { (char const*)alpn + alpn_position, alpn_length };
-                        if (alpn_size && m_context.alpn.contains_slow(alpn_str)) {
+                        if (alpn_size && m_context.options.alpn_list->contains_slow(alpn_str)) {
                             m_context.negotiated_alpn = alpn_str;
                             dbgln("negotiated alpn: {}", alpn_str);
                             break;
