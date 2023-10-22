@@ -15,6 +15,12 @@
 
 namespace HTTP {
 
+enum class ProtocolVersion {
+    HTTP1_0_and_older,
+    HTTP1_1,
+    HTTP2,
+};
+
 class Job : public Core::NetworkJob {
     C_OBJECT(Job);
 
@@ -30,6 +36,20 @@ public:
 
     HttpResponse* response() { return static_cast<HttpResponse*>(Core::NetworkJob::response()); }
     HttpResponse const* response() const { return static_cast<HttpResponse const*>(Core::NetworkJob::response()); }
+
+    void set_negotiated_version(StringView alpn)
+    {
+        VERIFY(m_state == State::InHeaders);
+
+        if (alpn == "h2"sv)
+            m_version = ProtocolVersion::HTTP2;
+        else if (alpn == "http/1.1"sv)
+            m_version = ProtocolVersion::HTTP1_1;
+        else if (alpn == "http/1.0"sv || alpn == "http/0.9"sv)
+            m_version = ProtocolVersion::HTTP1_0_and_older;
+        else
+            VERIFY_NOT_REACHED();
+    }
 
 protected:
     void finish_up();
@@ -51,7 +71,7 @@ protected:
     HttpRequest m_request;
     State m_state { State::InStatus };
     Core::BufferedSocketBase* m_socket { nullptr };
-    bool m_legacy_connection { false };
+    ProtocolVersion m_version { ProtocolVersion::HTTP1_1 };
     int m_code { -1 };
     HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_headers;
     Vector<DeprecatedString> m_set_cookie_headers;

@@ -261,7 +261,8 @@ void Job::on_socket_connected()
             }
             auto http_major_version = parse_ascii_digit(parts[0][5]);
             auto http_minor_version = parse_ascii_digit(parts[0][7]);
-            m_legacy_connection = http_major_version < 1 || (http_major_version == 1 && http_minor_version == 0);
+            if (http_major_version < 1 || (http_major_version == 1 && http_minor_version == 0))
+                m_version = ProtocolVersion::HTTP1_0_and_older;
 
             auto code = parts[1].to_uint();
             if (!code.has_value()) {
@@ -622,7 +623,7 @@ void Job::finish_up()
         // If the server responded with "Connection: close", close the connection
         // as the server may or may not want to close the socket. Also, if this is
         // a legacy HTTP server (1.0 or older), assume close is the default value.
-        if (auto result = response->headers().get("Connection"sv); result.has_value() ? result->equals_ignoring_ascii_case("close"sv) : m_legacy_connection)
+        if (auto result = response->headers().get("Connection"sv); result.has_value() ? result->equals_ignoring_ascii_case("close"sv) : m_version == ProtocolVersion::HTTP1_0_and_older)
             shutdown(ShutdownMode::CloseSocket);
         did_finish(response);
     });

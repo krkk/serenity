@@ -102,10 +102,12 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ConnectionFromClient& 
     auto protocol_request = TRequest::create_with_job(forward<TBadgedProtocol>(protocol), client, (TJob&)*job, move(output_stream));
     protocol_request->set_request_fd(pipe_result.value().read_fd);
 
-    if constexpr (IsSame<typename TBadgedProtocol::Type, HttpsProtocol>)
-        ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, *job, proxy_data);
-    else
+    if constexpr (IsSame<typename TBadgedProtocol::Type, HttpsProtocol>) {
+        auto const* connection = ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, *job, proxy_data);
+        job->set_negotiated_version(connection->negotiated_alpn);
+    } else {
         ConnectionCache::get_or_create_connection(ConnectionCache::g_tcp_connection_cache, url, *job, proxy_data);
+    }
 
     return protocol_request;
 }

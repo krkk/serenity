@@ -46,6 +46,7 @@ StringView HttpRequest::method_name() const
 
 ErrorOr<ByteBuffer> HttpRequest::to_raw_request() const
 {
+    dbgln("TO RAW REQUEST");
     StringBuilder builder;
     TRY(builder.try_append(method_name()));
     TRY(builder.try_append(' '));
