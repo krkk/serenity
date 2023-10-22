@@ -131,8 +131,17 @@ ByteBuffer TLSv12::build_hello()
     }
 
     if (alpn_length) {
-        // TODO
-        VERIFY_NOT_REACHED();
+        // application_layer_protocol_negotiation extension
+        builder.append((u16)ExtensionType::APPLICATION_LAYER_PROTOCOL_NEGOTIATION);
+
+        // extension length
+        builder.append((u16)(2 + alpn_length));
+
+        builder.append((u16)alpn_length);
+        for (auto const& protocol : *m_context.options.alpn_list) {
+            builder.append((u8)protocol.length());
+            builder.append(protocol.bytes());
+        }
     }
 
     // set the "length" field of the packet
