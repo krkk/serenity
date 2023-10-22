@@ -29,6 +29,8 @@ public:
 
     Function<Vector<TLS::Certificate>()> on_certificate_requested;
 
+    static constexpr auto alpn_list = Array { "http/1.1"sv };
+
 private:
     explicit HttpsJob(HttpRequest&& request, Stream& output_stream)
         : Job(move(request), output_stream)

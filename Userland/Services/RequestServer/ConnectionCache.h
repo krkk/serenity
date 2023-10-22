@@ -130,7 +130,7 @@ constexpr static size_t MaxConcurrentConnectionsPerURL = 4;
 constexpr static size_t ConnectionKeepAliveTimeMilliseconds = 10'000;
 
 template<typename T>
-ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
+ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url, Optional<ReadonlySpan<StringView>> alpn_list = {})
 {
     using SocketType = typename T::SocketType;
     using SocketStorageType = typename T::StorageType;
@@ -144,6 +144,8 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
 
         if constexpr (IsSame<TLS::TLSv12, SocketType>) {
             TLS::Options options;
+            dbgln("{}: SET ALPN: {}", url, alpn_list.value_or({}));
+            options.alpn_list = move(alpn_list);
             options.set_alert_handler([&connection](TLS::AlertDescription alert) {
                 Core::NetworkJob::Error reason;
                 if (alert == TLS::AlertDescription::HANDSHAKE_FAILURE)
@@ -177,13 +179,27 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
 
     Proxy proxy { proxy_data };
 
+    auto alpn_list = []<typename JobT>(JobT const&) -> Optional<ReadonlySpan<StringView>> {
+        if constexpr (requires { JobT::alpn_list; })
+            return JobT::alpn_list;
+        return {};
+    };
+
     using ReturnType = decltype(sockets_for_url[0].ptr());
     auto it = sockets_for_url.find_if([](auto& connection) { return connection->request_queue.is_empty(); });
     auto did_add_new_connection = false;
     auto failed_to_find_a_socket = it.is_end();
     if (failed_to_find_a_socket && sockets_for_url.size() < ConnectionCache::MaxConcurrentConnectionsPerURL) {
         using ConnectionType = RemoveCVReference<decltype(*cache.begin()->value->at(0))>;
-        auto connection_result = proxy.tunnel<typename ConnectionType::SocketType, typename ConnectionType::StorageType>(url);
+        auto connection_result = [&]() {
+            if constexpr (IsSame<TLS::TLSv12, typename ConnectionType::SocketType>) {
+                TLS::Options options {
+                    .alpn_list = alpn_list(job),
+                };
+                return proxy.tunnel<TLS::TLSv12, typename ConnectionType::StorageType>(url, move(options));
+            }
+            return proxy.tunnel<typename ConnectionType::SocketType, typename ConnectionType::StorageType>(url);
+        }();
         if (connection_result.is_error()) {
             dbgln("ConnectionCache: Connection to {} failed: {}", url, connection_result.error());
             Core::deferred_invoke([&job] {
@@ -233,7 +249,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
 
     auto& connection = *sockets_for_url[index];
     if (!connection.has_started) {
-        if (auto result = recreate_socket_if_needed(connection, url); result.is_error()) {
+        if (auto result = recreate_socket_if_needed(connection, url, alpn_list(job)); result.is_error()) {
             dbgln("ConnectionCache: request failed to start, failed to make a socket: {}", result.error());
             Core::deferred_invoke([&job] {
                 job.fail(Core::NetworkJob::Error::ConnectionFailed);
