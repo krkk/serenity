@@ -245,7 +245,7 @@ struct Context {
     ByteBuffer user_data;
     HashMap<DeprecatedString, Certificate> root_certificates;
 
-    StringView negotiated_alpn;
+    DeprecatedString negotiated_alpn;
 
     size_t send_retries { 0 };
 
