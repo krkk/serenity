@@ -98,6 +98,7 @@ struct Connection {
     Core::ElapsedTimer timer {};
     JobData job_data {};
     Proxy proxy {};
+    StringView negotiated_alpn {};
 };
 
 struct ConnectionKey {
@@ -207,6 +208,11 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
             });
             return ReturnType { nullptr };
         }
+        auto negotiated_alpn = [&] {
+            if constexpr (IsSame<TLS::TLSv12, typename ConnectionType::SocketType>)
+                return connection_result.value()->alpn();
+            return StringView();
+        }();
         auto socket_result = Core::BufferedSocket<typename ConnectionType::StorageType>::create(connection_result.release_value());
         if (socket_result.is_error()) {
             dbgln("ConnectionCache: Failed to make a buffered socket for {}: {}", url, socket_result.error());
@@ -220,6 +226,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
             typename ConnectionType::QueueType {},
             Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr).release_value_but_fixme_should_propagate_errors()));
         sockets_for_url.last()->proxy = move(proxy);
+        sockets_for_url.last()->negotiated_alpn = negotiated_alpn;
         did_add_new_connection = true;
     }
     size_t index;
