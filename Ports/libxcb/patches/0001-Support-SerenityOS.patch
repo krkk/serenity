@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Mon, 4 Aug 2025 18:13:46 +0200
+Subject: [PATCH] Support SerenityOS
+
+---
+ configure | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure b/configure
+index 33f5d89bbfe9d6d06e7c15acd73ffce0956c4a97..245d8027501b5db81f713f78770e6bb22275e179 100755
+--- a/configure
++++ b/configure
+@@ -21027,7 +21027,7 @@ printf "%s\n" "yes" >&6; }
+ fi
+ NEEDED="xau >= 0.99.2"
+ case $host_os in
+-linux*|darwin*|solaris*|dragonfly*|freebsd*|netbsd*) ;;
++linux*|darwin*|solaris*|dragonfly*|freebsd*|netbsd*|serenity*) ;;
+      *) NEEDED="$NEEDED pthread-stubs" ;;
+ esac
+ 
