@@ -190,6 +190,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`libuv`](libuv/)                             | libuv                                                         | 1.51.0                   | https://github.com/libuv/libuv                                       |
 | [`libvorbis`](libvorbis/)                     | libvorbis                                                     | 1.3.7                    | https://github.com/xiph/vorbis                                       |
 | [`libwebp`](libwebp/)                         | libwebp                                                       | 1.3.1                    | https://github.com/webmproject/libwebp                               |
+| [`libxau`](libxau/)                           | libxau                                                        | 1.0.12                   | https://gitlab.freedesktop.org/xorg/lib/libxau                       |
 | [`libxml2`](libxml2/)                         | libxml2                                                       | 2.11.5                   | http://www.xmlsoft.org/                                              |
 | [`libxmp`](libxmp/)                           | libxmp                                                        | 4.6.1                    | https://github.com/libxmp/libxmp                                     |
 | [`libyaml`](libyaml/)                         | libyaml                                                       | 0.2.5                    | https://pyyaml.org/wiki/LibYAML                                      |
