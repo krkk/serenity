@@ -353,6 +353,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`x264`](x264/)                               | x264                                                          | 4613ac3                  | https://www.videolan.org/developers/x264.html                        |
 | [`x265`](x265/)                               | x265                                                          | 3.6                      | https://bitbucket.org/multicoreware/x265_git/wiki/Home               |
 | [`xash3d-fwgs`](xash3d-fwgs/)                 | Xash3D FWGS game engine                                       | 2022.12.26               | https://github.com/FWGS/xash3d-fwgs                                  |
+| [`xcbproto`](xcbproto/)                       | xcb-proto                                                     | 1.17.0                   | https://gitlab.freedesktop.org/xorg/proto/xcbproto                   |
 | [`xmp-cli`](xmp-cli/)                         | Extended Module Player                                        | 4.2.0                    | https://github.com/libxmp/xmp-cli                                    |
 | [`xorgproto`](xorgproto/)                     | xorgproto                                                     | 2024.1                   | https://gitlab.freedesktop.org/xorg/proto/xorgproto                  |
 | [`xorriso`](xorriso/)                         | xorriso                                                       | 1.5.6                    | https://www.gnu.org/software/xorriso                                 |
