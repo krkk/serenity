@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Tue, 5 Aug 2025 11:54:15 +0200
+Subject: [PATCH] serenityos shared libs support i guess
+
+---
+ configure | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/configure b/configure
+index 091ac68ec60452b0002f6232e1ec9c7e0ef73a10..fdf1e8feda29b682d6c7c0956f71786af9afe7fc 100755
+--- a/configure
++++ b/configure
+@@ -6277,6 +6277,10 @@ rdos*)
+   lt_cv_deplibs_check_method=pass_all
+   ;;
+ 
++serenity*)
++  lt_cv_deplibs_check_method=pass_all
++  ;;
++
+ solaris*)
+   lt_cv_deplibs_check_method=pass_all
+   ;;
+@@ -12033,6 +12037,17 @@ rdos*)
+   dynamic_linker=no
+   ;;
+ 
++serenity*)
++  version_type=linux
++  need_lib_prefix=no
++  need_version=no
++  library_names_spec='${libname}${release}${shared_ext}${versuffix} ${libname}${release}${shared_ext}${major} ${libname}${shared_ext}'
++  soname_spec='${libname}${release}${shared_ext}${major}'
++  shlibpath_var=LD_LIBRARY_PATH
++  shlibpath_overrides_runpath=no
++  dynamic_linker='SerenityOS LibELF'
++  ;;
++
+ solaris*)
+   version_type=linux # correct to gnu/linux during the next big refactor
+   need_lib_prefix=no
