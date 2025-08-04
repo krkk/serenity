@@ -1,0 +1,7 @@
+#!/usr/bin/env -S bash ../.port_include.sh
+port='xtrans'
+version='1.6.0'
+files=(
+    "https://www.x.org/releases/individual/lib/xtrans-${version}.tar.xz#faafea166bf2451a173d9d593352940ec6404145c5d1da5c213423ce4d359e92"
+)
+useconfigure='true'

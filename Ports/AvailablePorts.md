@@ -356,6 +356,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`xmp-cli`](xmp-cli/)                         | Extended Module Player                                        | 4.2.0                    | https://github.com/libxmp/xmp-cli                                    |
 | [`xorgproto`](xorgproto/)                     | xorgproto                                                     | 2024.1                   | https://gitlab.freedesktop.org/xorg/proto/xorgproto                  |
 | [`xorriso`](xorriso/)                         | xorriso                                                       | 1.5.6                    | https://www.gnu.org/software/xorriso                                 |
+| [`xtrans`](xtrans/)                           | xtrans                                                        | 1.6.0                    | https://gitlab.freedesktop.org/xorg/lib/libxtrans                    |
 | [`xz`](xz/)                                   | xz                                                            | 5.6.2                    | https://tukaani.org/xz/                                              |
 | [`yasm`](yasm/)                               | Yasm Modular Assembler                                        | 1.3.0                    | https://yasm.tortall.net/                                            |
 | [`zig`](zig/)                                 | Zig programming language                                      | 0.12.0-dev.141+ddf5859c2 | https://ziglang.org/                                                 |
