@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Mon, 4 Aug 2025 18:51:52 +0200
+Subject: [PATCH] serenity os support ?
+
+---
+ configure | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/configure b/configure
+index de808c2d453de518ce0e904341f17d851ca099eb..79052c4ef7a24d5a57077e1c7e4c1b7de95d00df 100755
+--- a/configure
++++ b/configure
+@@ -23276,7 +23276,7 @@ esac
+ # XXX incomplete, please fill this in
+ if test x$xthreads = xyes ; then
+     case $host_os in
+-    linux*|gnu*|k*bsd*-gnu)
++    linux*|gnu*|k*bsd*-gnu|serenity*)
+         XTHREADLIB=-lpthread ;;
+     netbsd*)
+ 	XTHREAD_CFLAGS="-D_POSIX_THREAD_SAFE_FUNCTIONS"
+@@ -23298,7 +23298,7 @@ if test "x$USE_THREAD_SAFETY_CONSTRUCTOR" = "xyes"; then
+ else
+     # This should be kept in sync with libxcb
+     case $host_os in
+-    linux*|darwin*|solaris*|dragonfly*|freebsd*|netbsd*) ;;
++    linux*|darwin*|solaris*|dragonfly*|freebsd*|netbsd*|serenity*) ;;
+          *) X11_REQUIRES="$X11_REQUIRES pthread-stubs" ;;
+     esac
+ fi

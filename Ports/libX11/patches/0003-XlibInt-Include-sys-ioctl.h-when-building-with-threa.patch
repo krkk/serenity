@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Mon, 4 Aug 2025 19:51:04 +0200
+Subject: [PATCH] XlibInt: Include sys/ioctl.h when building with threading
+ disabled
+
+---
+ src/XlibInt.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/XlibInt.c b/src/XlibInt.c
+index 8f84ebcff42aac84a7811da4ae19100c4fb787d4..e1d30ea640daebb031b8cedb8012876468f24c19 100644
+--- a/src/XlibInt.c
++++ b/src/XlibInt.c
+@@ -98,6 +98,9 @@ xthread_t (*_Xthread_self_fn)(void) = NULL;
+ #define ECHECK(err) (WSAGetLastError() == err)
+ #define ESET(val) WSASetLastError(val)
+ #else
++ #ifdef HAVE_SYS_IOCTL_H
++ #include <sys/ioctl.h>
++ #endif
+ #define ECHECK(err) (errno == err)
+ #define ESET(val) errno = val
+ #endif

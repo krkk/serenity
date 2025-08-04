@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Mon, 4 Aug 2025 19:00:00 +0200
+Subject: [PATCH] Dzikie naprawki dla nonthreaded
+
+---
+ src/xcb_io.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/src/xcb_io.c b/src/xcb_io.c
+index 4933993bf4d5c5e5e02938cc237bc316ea52f9d8..ecb8f2c454fb8a627d9996ffd8afa12151c44d30 100644
+--- a/src/xcb_io.c
++++ b/src/xcb_io.c
+@@ -32,12 +32,8 @@
+ 
+ #define throw_thread_fail_assert(_message, _var) do { \
+ 	fprintf(stderr, "[xcb] " _message "\n"); \
+-        if (_Xglobal_lock) { \
+-            fprintf(stderr, "[xcb] You called XInitThreads, this is not your fault\n"); \
+-        } else { \
+             fprintf(stderr, "[xcb] Most likely this is a multi-threaded client " \
+                             "and XInitThreads has not been called\n"); \
+-        } \
+ 	xcb_fail_assert(_message, _var); \
+ } while (0)
+ 
