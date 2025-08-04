@@ -354,6 +354,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`x265`](x265/)                               | x265                                                          | 3.6                      | https://bitbucket.org/multicoreware/x265_git/wiki/Home               |
 | [`xash3d-fwgs`](xash3d-fwgs/)                 | Xash3D FWGS game engine                                       | 2022.12.26               | https://github.com/FWGS/xash3d-fwgs                                  |
 | [`xmp-cli`](xmp-cli/)                         | Extended Module Player                                        | 4.2.0                    | https://github.com/libxmp/xmp-cli                                    |
+| [`xorgproto`](xorgproto/)                     | xorgproto                                                     | 2024.1                   | https://gitlab.freedesktop.org/xorg/proto/xorgproto                  |
 | [`xorriso`](xorriso/)                         | xorriso                                                       | 1.5.6                    | https://www.gnu.org/software/xorriso                                 |
 | [`xz`](xz/)                                   | xz                                                            | 5.6.2                    | https://tukaani.org/xz/                                              |
 | [`yasm`](yasm/)                               | Yasm Modular Assembler                                        | 1.3.0                    | https://yasm.tortall.net/                                            |
