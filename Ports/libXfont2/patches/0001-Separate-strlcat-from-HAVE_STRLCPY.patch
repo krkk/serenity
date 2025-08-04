@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Mon, 4 Aug 2025 20:32:27 +0200
+Subject: [PATCH] Separate strlcat from HAVE_STRLCPY
+
+---
+ src/util/replace.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/util/replace.h b/src/util/replace.h
+index 39fe4930b5ddbf52ca932f22780535d3f1c78dd9..1458f10e054897017a87cabc17f769b51489c8e5 100644
+--- a/src/util/replace.h
++++ b/src/util/replace.h
+@@ -47,6 +47,9 @@ reallocarray(void *optr, size_t nmemb, size_t size);
+ #ifndef HAVE_STRLCPY
+ extern _X_HIDDEN size_t
+ strlcpy(char *dst, const char *src, size_t siz);
++#endif
++
++#ifndef HAVE_STRLCAT
+ extern _X_HIDDEN size_t
+ strlcat(char *dst, const char *src, size_t siz);
+ #endif

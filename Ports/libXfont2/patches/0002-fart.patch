@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Mon, 4 Aug 2025 20:43:27 +0200
+Subject: [PATCH] fart
+
+---
+ src/fc/fslibos.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/fc/fslibos.h b/src/fc/fslibos.h
+index d42c5dcbe68746985043faf23d31ec6942d91632..567ac22911a534d9bd84da2e35f59573ff3da26b 100644
+--- a/src/fc/fslibos.h
++++ b/src/fc/fslibos.h
+@@ -60,7 +60,7 @@ from The Open Group.
+ #   endif
+ #  endif
+ #  ifndef OPEN_MAX
+-#   if defined(SVR4)
++#   if defined(SVR4) || defined(__serenity__)
+ #    define OPEN_MAX 256
+ #   else
+ #    include <sys/param.h>

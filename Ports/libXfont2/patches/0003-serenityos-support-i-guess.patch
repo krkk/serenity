@@ -1,0 +1,43 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Tue, 5 Aug 2025 11:49:24 +0200
+Subject: [PATCH] serenityos support i guess
+
+copied from freetype's patch
+---
+ configure | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/configure b/configure
+index e9ed3ec099d1a130520f4d7b13e30bd1d1237397..6b7d89712a9afc4a5f874f050433b55c4bb6257c 100755
+--- a/configure
++++ b/configure
+@@ -6690,6 +6690,10 @@ rdos*)
+   lt_cv_deplibs_check_method=pass_all
+   ;;
+ 
++serenity*)
++  lt_cv_deplibs_check_method=pass_all
++  ;;
++
+ solaris*)
+   lt_cv_deplibs_check_method=pass_all
+   ;;
+@@ -12446,6 +12450,17 @@ rdos*)
+   dynamic_linker=no
+   ;;
+ 
++serenity*)
++  version_type=linux
++  need_lib_prefix=no
++  need_version=no
++  library_names_spec='${libname}${release}${shared_ext}${versuffix} ${libname}${release}${shared_ext}${major} ${libname}${shared_ext}'
++  soname_spec='${libname}${release}${shared_ext}${major}'
++  shlibpath_var=LD_LIBRARY_PATH
++  shlibpath_overrides_runpath=no
++  dynamic_linker='SerenityOS LibELF'
++  ;;
++
+ solaris*)
+   version_type=linux # correct to gnu/linux during the next big refactor
+   need_lib_prefix=no
