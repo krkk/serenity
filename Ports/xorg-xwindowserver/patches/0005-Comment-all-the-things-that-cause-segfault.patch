@@ -1,0 +1,77 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Tue, 5 Aug 2025 20:29:36 +0200
+Subject: [PATCH] Comment all* the things that cause segfault
+
+---
+ dix/devices.c  | 3 ++-
+ dix/dispatch.c | 2 +-
+ dix/events.c   | 4 ++--
+ dix/main.c     | 4 ++--
+ 4 files changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/dix/devices.c b/dix/devices.c
+index 74039020783aeb93e7c6e47efc389f315ec841a4..d1f628b1835a2e34469a6b86f4c5bb8a94dbbced 100644
+--- a/dix/devices.c
++++ b/dix/devices.c
+@@ -591,7 +591,8 @@ ActivateDevice(DeviceIntPtr dev, BOOL sendevent)
+     int ret = Success;
+     ScreenPtr pScreen = screenInfo.screens[0];
+ 
+-    if (!dev || !dev->deviceProc)
++    printf("uum so you need to fix it. dev=%d, devProc=%d\n", dev != NULL, dev && dev->deviceProc);
++    if (!dev || !dev->deviceProc)// || TRUE)
+         return BadImplementation;
+ 
+     input_lock();
+diff --git a/dix/dispatch.c b/dix/dispatch.c
+index efb6818df79b2a754f8087454499ce1a025a88de..64e8af4bda290ff0ba987c60448e84b0d455a0c4 100644
+--- a/dix/dispatch.c
++++ b/dix/dispatch.c
+@@ -633,7 +633,7 @@ CreateConnectionBlock(void)
+     setup.bitmapScanlinePad = screenInfo.bitmapScanlinePad;
+ 
+     setup.bitmapBitOrder = screenInfo.bitmapBitOrder;
+-    setup.motionBufferSize = NumMotionEvents();
++    setup.motionBufferSize = 100; // FIXME NumMotionEvents();
+     setup.numRoots = screenInfo.numScreens;
+     setup.nbytesVendor = strlen(VendorString);
+     setup.numFormats = screenInfo.numPixmapFormats;
+diff --git a/dix/events.c b/dix/events.c
+index 2c99cd29e8f9da7fbc0ff6e8f31c74e39f91d839..8e332144a69f32d85c754e7e9352d27be80c981a 100644
+--- a/dix/events.c
++++ b/dix/events.c
+@@ -6048,7 +6048,7 @@ WriteEventsToClient(ClientPtr pClient, int count, xEvent *events)
+             events[i].u.u.sequenceNumber = pClient->sequence;
+ 
+     /* Let XKB rewrite the state, as it depends on client preferences. */
+-    XkbFilterEvents(pClient, count, events);
++    //XkbFilterEvents(pClient, count, events);
+ 
+ #ifdef XINERAMA
+     if (!noPanoramiXExtension &&
+@@ -6215,7 +6215,7 @@ DeviceIntPtr
+ PickKeyboard(ClientPtr client)
+ {
+     DeviceIntPtr ptr = PickPointer(client);
+-    DeviceIntPtr kbd = GetMaster(ptr, MASTER_KEYBOARD);
++    DeviceIntPtr kbd = 0; //GetMaster(ptr, MASTER_KEYBOARD);
+ 
+     if (!kbd) {
+         ErrorF("[dix] ClientPointer not paired with a keyboard. This "
+diff --git a/dix/main.c b/dix/main.c
+index 0c57ba605a2ee399f3eeb587183048043b5d0c75..86143997ea450710848462679f87cb1207e0c3f2 100644
+--- a/dix/main.c
++++ b/dix/main.c
+@@ -254,9 +254,9 @@ dix_main(int argc, char *argv[], char *envp[])
+         for (i = 0; i < screenInfo.numScreens; i++)
+             InitRootWindow(screenInfo.screens[i]->root);
+ 
+-        InitCoreDevices();
++        //InitCoreDevices();
+         InitInput(argc, argv);
+-        InitAndStartDevices();
++        //InitAndStartDevices();
+         ReserveClientIds(serverClient);
+ 
+         dixSaveScreens(serverClient, SCREEN_SAVER_FORCER, ScreenSaverReset);

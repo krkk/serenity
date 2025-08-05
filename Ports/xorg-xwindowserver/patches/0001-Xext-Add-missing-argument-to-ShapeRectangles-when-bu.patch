@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Mon, 4 Aug 2025 21:45:46 +0200
+Subject: [PATCH] Xext: Add missing argument to ShapeRectangles when building
+ without XINERAMA
+
+---
+ Xext/shape.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Xext/shape.c b/Xext/shape.c
+index 65c55699fe9e2393f270134ce9fb092cbed3bbff..49fe92c6f266e64f2e85e3866519172d9965b36c 100644
+--- a/Xext/shape.c
++++ b/Xext/shape.c
+@@ -315,7 +315,7 @@ ProcShapeRectangles(ClientPtr client)
+     }
+     return result;
+ #else
+-    return ShapeRectangles(client);
++    return ShapeRectangles(client, stuff);
+ #endif
+ }
+ 

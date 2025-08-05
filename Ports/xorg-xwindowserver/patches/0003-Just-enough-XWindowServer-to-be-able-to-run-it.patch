@@ -1,0 +1,981 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Tue, 5 Aug 2025 15:35:20 +0200
+Subject: [PATCH] Just enough XWindowServer to be able to run it
+
+---
+ hw/meson.build                          |   4 +
+ hw/xwindowserver/meson.build            |  25 ++
+ hw/xwindowserver/xwindowserver-input.c  |  73 ++++++
+ hw/xwindowserver/xwindowserver-screen.c | 142 ++++++++++++
+ hw/xwindowserver/xwindowserver-screen.h | 114 ++++++++++
+ hw/xwindowserver/xwindowserver-window.c | 288 ++++++++++++++++++++++++
+ hw/xwindowserver/xwindowserver-window.h | 106 +++++++++
+ hw/xwindowserver/xwindowserver.c        | 107 +++++++++
+ meson.build                             |  12 +-
+ meson_options.txt                       |   2 +
+ 10 files changed, 872 insertions(+), 1 deletion(-)
+ create mode 100644 hw/xwindowserver/meson.build
+ create mode 100644 hw/xwindowserver/xwindowserver-input.c
+ create mode 100644 hw/xwindowserver/xwindowserver-screen.c
+ create mode 100644 hw/xwindowserver/xwindowserver-screen.h
+ create mode 100644 hw/xwindowserver/xwindowserver-window.c
+ create mode 100644 hw/xwindowserver/xwindowserver-window.h
+ create mode 100644 hw/xwindowserver/xwindowserver.c
+
+diff --git a/hw/meson.build b/hw/meson.build
+index f9605a5b7d009fde1f29a961185d3458e490204d..578eaa4769d597c39e5e3e3e5c1c1dc788b1b143 100644
+--- a/hw/meson.build
++++ b/hw/meson.build
+@@ -25,3 +25,7 @@ endif
+ if build_xwin
+     subdir('xwin')
+ endif
++
++if build_xwindowserver
++    subdir('xwindowserver')
++endif
+diff --git a/hw/xwindowserver/meson.build b/hw/xwindowserver/meson.build
+new file mode 100644
+index 0000000000000000000000000000000000000000..2d736aab2452cb8b6a1657b216bdc7d0cf554543
+--- /dev/null
++++ b/hw/xwindowserver/meson.build
+@@ -0,0 +1,25 @@
++srcs = [
++    'xwindowserver.c',
++    'xwindowserver-input.c',
++    'xwindowserver-screen.c',
++    'xwindowserver-window.c',
++    '../../mi/miinitext.c',
++]
++
++xwindowserver_server = executable(
++    'XWindowServer',
++    srcs,
++    include_directories: inc,
++    dependencies: [
++        common_dep,
++    ],
++    link_with: [
++        libxserver_main,
++        libxserver_fb,
++        libxserver,
++        libxserver_xkb_stubs,
++        libxserver_xi_stubs,
++    ],
++    install: true,
++)
++
+diff --git a/hw/xwindowserver/xwindowserver-input.c b/hw/xwindowserver/xwindowserver-input.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..7171b7a8e85c958923f3181d13f3e3a1b81bc026
+--- /dev/null
++++ b/hw/xwindowserver/xwindowserver-input.c
+@@ -0,0 +1,73 @@
++/*
++ * Copyright © 2014 Intel Corporation
++ * Copyright © 2008 Kristian Høgsberg
++ *
++ * Permission to use, copy, modify, distribute, and sell this software
++ * and its documentation for any purpose is hereby granted without
++ * fee, provided that the above copyright notice appear in all copies
++ * and that both that copyright notice and this permission notice
++ * appear in supporting documentation, and that the name of the
++ * copyright holders not be used in advertising or publicity
++ * pertaining to distribution of the software without specific,
++ * written prior permission.  The copyright holders make no
++ * representations about the suitability of this software for any
++ * purpose.  It is provided "as is" without express or implied
++ * warranty.
++ *
++ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
++ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
++ * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
++ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
++ * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
++ * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
++ * SOFTWARE.
++ */
++
++#include "dix/dix_priv.h"
++#include "dix/exevents_priv.h"
++#include "dix/input_priv.h"
++#include "mi/mi_priv.h"
++#include "mi/mipointer_priv.h"
++
++#include <inputstr.h>
++#include <xkbsrv.h>
++#include <xserver-properties.h>
++#include <mipointer.h>
++#include <mipointrst.h>
++#include <misc.h>
++
++#include "xwindowserver-screen.h"
++
++static DevPrivateKeyRec xwl_tablet_private_key;
++
++void
++ProcessInputEvents(void)
++{
++    mieqProcessInputEvents();
++}
++
++void
++DDXRingBell(int volume, int pitch, int duration)
++{
++}
++
++void
++InitInput(int argc, char *argv[])
++{
++    ScreenPtr pScreen = screenInfo.screens[0];
++    struct xwl_screen *xwl_screen = xwl_screen_get(pScreen);
++
++    if (!dixRegisterPrivateKey(&xwl_tablet_private_key, PRIVATE_DEVICE, 0)) {
++        ErrorF("Failed to register private key\n");
++        return;
++    }
++
++    mieqInit();
++}
++
++void
++CloseInput(void)
++{
++    mieqFini();
++}
+diff --git a/hw/xwindowserver/xwindowserver-screen.c b/hw/xwindowserver/xwindowserver-screen.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..f95f39689dc30da7ddec625db7eac34754938471
+--- /dev/null
++++ b/hw/xwindowserver/xwindowserver-screen.c
+@@ -0,0 +1,142 @@
++/*
++ * Copyright © 2011-2014 Intel Corporation
++ *
++ * Permission to use, copy, modify, distribute, and sell this software
++ * and its documentation for any purpose is hereby granted without
++ * fee, provided that the above copyright notice appear in all copies
++ * and that both that copyright notice and this permission notice
++ * appear in supporting documentation, and that the name of the
++ * copyright holders not be used in advertising or publicity
++ * pertaining to distribution of the software without specific,
++ * written prior permission.  The copyright holders make no
++ * representations about the suitability of this software for any
++ * purpose.  It is provided "as is" without express or implied
++ * warranty.
++ *
++ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
++ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
++ * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
++ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
++ * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
++ * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
++ * SOFTWARE.
++ */
++
++#include <math.h>
++#include <stdio.h>
++#include <unistd.h>
++#include <errno.h>
++#include <stdbool.h>
++
++#include <X11/Xatom.h>
++#include <X11/Xfuncproto.h>
++
++#include <dix-config.h>
++#include "dix/input_priv.h"
++#include "dix/property_priv.h"
++#include "os/client_priv.h"
++#include "os/xserver_poll.h"
++
++#include <micmap.h>
++#include <misyncshm.h>
++#include <os.h>
++#include <fb.h>
++#include <dixstruct.h>
++#include <propertyst.h>
++#include <inputstr.h>
++#include <xacestr.h>
++
++#include "xwindowserver-screen.h"
++#include "xwindowserver-window.h"
++
++#ifdef MITSHM
++#include "shmint.h"
++#endif
++
++static DevPrivateKeyRec xwl_screen_private_key;
++static DevPrivateKeyRec xwl_client_private_key;
++
++#define DEFAULT_DPI 96
++
++Bool
++xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
++{
++    struct xwl_screen *xwl_screen;
++    Pixel red_mask, blue_mask, green_mask;
++    int ret, bpc, green_bpc, i;
++
++    if (!dixRegisterPrivateKey(&xwl_screen_private_key, PRIVATE_SCREEN, 0))
++        return FALSE;
++    if (!xwl_window_init())
++        return FALSE;
++
++    xwl_screen = calloc(1, sizeof *xwl_screen);
++    if (xwl_screen == NULL)
++        return FALSE;
++
++    dixSetPrivate(&pScreen->devPrivates, &xwl_screen_private_key, xwl_screen);
++    xwl_screen->screen = pScreen;
++
++    for (i = 1; i < argc; i++) {
++        if (strcmp(argv[i], "-rootless") == 0) {
++            xwl_screen->rootless = 1;
++
++            /* Disable the XSS extension on Xwayland rootless.
++             *
++             * Xwayland is just a Wayland client, no X11 screensaver
++             * should be expected to work reliably on Xwayland rootless.
++             */
++            ScreenSaverTime = 0;
++            ScreenSaverInterval = 0;
++            defaultScreenSaverTime = 0;
++            defaultScreenSaverInterval = 0;
++        }
++    }
++
++    xwl_screen->depth = 24;
++
++    if (!monitorResolution)
++        monitorResolution = DEFAULT_DPI;
++
++    bpc = xwl_screen->depth / 3;
++    green_bpc = xwl_screen->depth - 2 * bpc;
++    blue_mask = (1 << bpc) - 1;
++    green_mask = ((1 << green_bpc) - 1) << bpc;
++    red_mask = blue_mask << (green_bpc + bpc);
++
++    miSetVisualTypesAndMasks(xwl_screen->depth,
++                             ((1 << TrueColor) | (1 << DirectColor)),
++                             green_bpc, TrueColor,
++                             red_mask, green_mask, blue_mask);
++
++    miSetPixmapDepths();
++
++    ret = fbScreenInit(pScreen, NULL,
++                       400, //xwl_screen_get_width(xwl_screen),
++                       300, //xwl_screen_get_height(xwl_screen),
++                       monitorResolution, monitorResolution, 0,
++                       BitsPerPixel(xwl_screen->depth));
++    if (!ret)
++        return FALSE;
++
++    fbPictureInit(pScreen, 0, 0);
++
++    pScreen->blackPixel = 0;
++    pScreen->whitePixel = 1;
++
++    ret = fbCreateDefColormap(pScreen);
++
++    xwl_screen->RealizeWindow = pScreen->RealizeWindow;
++    pScreen->RealizeWindow = xwl_realize_window;
++
++    return ret;
++}
++
++struct xwl_screen *
++xwl_screen_get(ScreenPtr screen)
++{
++    return dixLookupPrivate(&screen->devPrivates, &xwl_screen_private_key);
++}
++
++
+diff --git a/hw/xwindowserver/xwindowserver-screen.h b/hw/xwindowserver/xwindowserver-screen.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..86cd8c98926f53d10d3c7f824c8f10cfa9eb93c3
+--- /dev/null
++++ b/hw/xwindowserver/xwindowserver-screen.h
+@@ -0,0 +1,114 @@
++/*
++ * Copyright © 2011-2014 Intel Corporation
++ *
++ * Permission to use, copy, modify, distribute, and sell this software
++ * and its documentation for any purpose is hereby granted without
++ * fee, provided that the above copyright notice appear in all copies
++ * and that both that copyright notice and this permission notice
++ * appear in supporting documentation, and that the name of the
++ * copyright holders not be used in advertising or publicity
++ * pertaining to distribution of the software without specific,
++ * written prior permission.  The copyright holders make no
++ * representations about the suitability of this software for any
++ * purpose.  It is provided "as is" without express or implied
++ * warranty.
++ *
++ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
++ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
++ * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
++ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
++ * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
++ * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
++ * SOFTWARE.
++ */
++
++#ifndef XWAYLAND_SCREEN_H
++#define XWAYLAND_SCREEN_H
++
++#include <stdio.h>
++#include <unistd.h>
++#include <X11/X.h>
++#include <dix.h>
++
++struct xwl_screen {
++    int depth;
++    ScreenPtr screen;
++    Bool rootless;
++
++    ClipNotifyProcPtr ClipNotify;
++    CreateScreenResourcesProcPtr CreateScreenResources;
++    CloseScreenProcPtr CloseScreen;
++    ConfigNotifyProcPtr ConfigNotify;
++    RealizeWindowProcPtr RealizeWindow;
++    UnrealizeWindowProcPtr UnrealizeWindow;
++    DestroyWindowProcPtr DestroyWindow;
++    XYToWindowProcPtr XYToWindow;
++    SetWindowPixmapProcPtr SetWindowPixmap;
++    ChangeWindowAttributesProcPtr ChangeWindowAttributes;
++    ResizeWindowProcPtr ResizeWindow;
++    MoveWindowProcPtr MoveWindow;
++    SourceValidateProcPtr SourceValidate;
++    SetShapeProcPtr SetShape;
++
++    int (*GrabServer) (ClientPtr client);
++    int (*UngrabServer) (ClientPtr client);
++
++    struct xorg_list output_list;
++    struct xorg_list seat_list;
++    struct xorg_list damage_window_list;
++    struct xorg_list window_list;
++    Bool ignore_damage;
++
++    int need_source_validate;
++
++#define XWL_FORMAT_ARGB8888 (1 << 0)
++#define XWL_FORMAT_XRGB8888 (1 << 1)
++#define XWL_FORMAT_RGB565   (1 << 2)
++
++    int prepare_read;
++    int wait_flush;
++
++    uint32_t num_formats;
++    struct xwl_format *formats;
++    void *egl_display, *egl_context;
++
++    struct glamor_context *glamor_ctx;
++
++    Atom allow_commits_prop;
++
++    /* The preferred GLVND vendor. If NULL, "mesa" is assumed. */
++    const char *glvnd_vendor;
++    const char *output_name;
++
++    uint32_t present_capabilities;
++};
++
++/* Apps which use randr/vidmode to change the mode when going fullscreen,
++ * usually change the mode of only a single monitor, so this should be plenty.
++ */
++#define XWL_CLIENT_MAX_EMULATED_MODES 16
++
++struct xwl_client {
++};
++
++struct xwl_client *xwl_client_get(ClientPtr client);
++struct xwl_screen *xwl_screen_get(ScreenPtr screen);
++Bool xwl_screen_has_viewport_support(struct xwl_screen *xwl_screen);
++Bool xwl_screen_has_resolution_change_emulation(struct xwl_screen *xwl_screen);
++void xwl_screen_check_resolution_change_emulation(struct xwl_screen *xwl_screen);
++struct xwl_output *xwl_screen_get_first_output(struct xwl_screen *xwl_screen);
++struct xwl_output *xwl_screen_get_fixed_or_first_output(struct xwl_screen *xwl_screen);
++int xwl_screen_get_width(struct xwl_screen *xwl_screen);
++int xwl_screen_get_height(struct xwl_screen *xwl_screen);
++
++Bool xwl_close_screen(ScreenPtr screen);
++Bool xwl_screen_init(ScreenPtr pScreen, int argc, char **argv);
++void xwl_sync_events (struct xwl_screen *xwl_screen);
++void xwl_screen_roundtrip (struct xwl_screen *xwl_screen);
++int xwl_screen_get_next_output_serial(struct xwl_screen * xwl_screen);
++void xwl_screen_lost_focus(struct xwl_screen *xwl_screen);
++Bool xwl_screen_update_global_surface_scale(struct xwl_screen *xwl_screen);
++Bool xwl_screen_should_use_fractional_scale(struct xwl_screen *xwl_screen);
++
++#endif /* XWAYLAND_SCREEN_H */
+diff --git a/hw/xwindowserver/xwindowserver-window.c b/hw/xwindowserver/xwindowserver-window.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..17f95ead954eef680eb054312e5a0688369cf75f
+--- /dev/null
++++ b/hw/xwindowserver/xwindowserver-window.c
+@@ -0,0 +1,288 @@
++/*
++ * Copyright © 2011-2014 Intel Corporation
++ *
++ * Permission to use, copy, modify, distribute, and sell this software
++ * and its documentation for any purpose is hereby granted without
++ * fee, provided that the above copyright notice appear in all copies
++ * and that both that copyright notice and this permission notice
++ * appear in supporting documentation, and that the name of the
++ * copyright holders not be used in advertising or publicity
++ * pertaining to distribution of the software without specific,
++ * written prior permission.  The copyright holders make no
++ * representations about the suitability of this software for any
++ * purpose.  It is provided "as is" without express or implied
++ * warranty.
++ *
++ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
++ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
++ * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
++ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
++ * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
++ * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
++ * SOFTWARE.
++ */
++
++#include <dix-config.h>
++
++#include <float.h>
++#include <math.h>
++#include <sys/mman.h>
++
++#include <X11/X.h>
++#include <X11/Xatom.h>
++
++#include "dix/dix_priv.h"
++#include "dix/property_priv.h"
++
++#include "compositeext.h"
++#include "compint.h"
++#include "inputstr.h"
++#include "propertyst.h"
++
++#include "xwindowserver-window.h"
++#include "xwindowserver-screen.h"
++
++#define DELAYED_WL_SURFACE_DESTROY 1000 /* ms */
++
++#define MAX_ROOTFUL_WIDTH 32767
++#define MAX_ROOTFUL_HEIGHT 32767
++#define MIN_ROOTFUL_WIDTH 320
++#define MIN_ROOTFUL_HEIGHT 200
++
++#define FRACTIONAL_SCALE_DENOMINATOR 120
++
++static DevPrivateKeyRec xwl_window_private_key;
++static DevPrivateKeyRec xwl_damage_private_key;
++static const char *xwl_surface_tag = "xwl-surface";
++
++static Bool xwl_window_attach_buffer(struct xwl_window *);
++
++struct xwl_window *
++xwl_window_get(WindowPtr window)
++{
++    return dixLookupPrivate(&window->devPrivates, &xwl_window_private_key);
++}
++
++struct xwl_window *
++xwl_window_from_window(WindowPtr window)
++{
++    struct xwl_window *xwl_window;
++
++    while (window) {
++        xwl_window = xwl_window_get(window);
++        if (xwl_window)
++            return xwl_window;
++
++        window = window->parent;
++    }
++
++    return NULL;
++}
++
++static Bool
++xwl_create_root_surface(struct xwl_window *xwl_window)
++{
++    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
++    WindowPtr window = xwl_window->toplevel;
++
++    //xwl_window_rootful_update_title(xwl_window);
++    //xwl_window_rootful_set_app_id(xwl_window);
++
++    return TRUE;
++}
++
++static uint32_t
++serial_lo(uint64_t value)
++{
++    return value & 0xFFFFFFFFu;
++}
++
++static uint32_t
++serial_hi(uint64_t value)
++{
++    return value >> 32u;
++}
++
++static void
++send_window_client_message(struct xwl_window *xwl_window, Atom type_atom, uint64_t value)
++{
++    DeviceIntPtr dev;
++    xEvent e;
++
++    e.u.u.type = ClientMessage;
++    e.u.u.detail = 32;
++    e.u.clientMessage.window = xwl_window->toplevel->drawable.id;
++    e.u.clientMessage.u.l.type = type_atom;
++    e.u.clientMessage.u.l.longs0 = serial_lo(value);
++    e.u.clientMessage.u.l.longs1 = serial_hi(value);
++    e.u.clientMessage.u.l.longs2 = 0;
++    e.u.clientMessage.u.l.longs3 = 0;
++    e.u.clientMessage.u.l.longs4 = 0;
++
++    dev = PickPointer(serverClient);
++    DeliverEventsToWindow(dev, xwl_window->xwl_screen->screen->root,
++                          &e, 1, SubstructureRedirectMask, NullGrab);
++}
++
++static void
++send_surface_id_event_serial(struct xwl_window *xwl_window)
++{
++    static const char atom_name[] = "WL_SURFACE_SERIAL";
++    static Atom type_atom;
++    uint64_t serial;
++
++    if (type_atom == None)
++        type_atom = MakeAtom(atom_name, strlen(atom_name), TRUE);
++}
++
++static void
++send_surface_id_event_legacy(struct xwl_window *xwl_window)
++{
++    static const char atom_name[] = "WL_SURFACE_ID";
++    static Atom type_atom;
++    uint32_t surface_id;
++
++    if (type_atom == None)
++        type_atom = MakeAtom(atom_name, strlen(atom_name), TRUE);
++
++    /* Flush wayland display *before* setting the atom in the legacy path */
++    send_window_client_message(xwl_window, type_atom, (uint64_t)surface_id);
++}
++
++static void
++send_surface_id_event(struct xwl_window *xwl_window)
++{
++    return xwl_window->xwayland_surface
++        ? send_surface_id_event_serial(xwl_window)
++        : send_surface_id_event_legacy(xwl_window);
++
++}
++
++static void
++xwl_window_init_allow_commits(struct xwl_window *xwl_window)
++{
++    PropertyPtr prop = NULL;
++    int ret;
++
++    ret = dixLookupProperty(&prop, xwl_window->toplevel,
++                            xwl_window->xwl_screen->allow_commits_prop,
++                            serverClient, DixReadAccess);
++}
++
++static struct xwl_window *
++ensure_surface_for_window(WindowPtr window)
++{
++    ScreenPtr screen = window->drawable.pScreen;
++    struct xwl_screen *xwl_screen;
++    struct xwl_window *xwl_window;
++    WindowPtr toplevel;
++
++    xwl_window = xwl_window_from_window(window);
++    if (xwl_window)
++        return xwl_window;
++
++    xwl_screen = xwl_screen_get(screen);
++
++    if (xwl_screen->rootless) {
++        //puts(" rootless breaks here");
++        //if (window->redirectDraw != RedirectDrawManual)
++        //    return NULL;
++        //puts(" rootless fixed");
++    }
++    else {
++        if (window->parent)
++            return NULL;
++    }
++
++    xwl_window = calloc(1, sizeof *xwl_window);
++    if (xwl_window == NULL)
++        return NULL;
++
++    xwl_window->xwl_screen = xwl_screen;
++    xwl_window->toplevel = window;
++    xwl_window->surface_window = window;
++    xwl_window->fractional_scale_numerator = FRACTIONAL_SCALE_DENOMINATOR;
++    xwl_window->viewport_scale_x = 1.0;
++    xwl_window->viewport_scale_y = 1.0;
++    xwl_window->surface_scale = 1;
++    xorg_list_init(&xwl_window->xwl_output_list);
++
++    if (!xwl_screen->rootless && !xwl_create_root_surface(xwl_window))
++        goto err;
++
++    send_surface_id_event(xwl_window);
++
++    compRedirectWindow(serverClient, window, CompositeRedirectManual);
++
++    dixSetPrivate(&window->devPrivates, &xwl_window_private_key, xwl_window);
++    xorg_list_init(&xwl_window->link_damage);
++    xorg_list_init(&xwl_window->frame_callback_list);
++
++    xwl_window_init_allow_commits(xwl_window);
++
++    return xwl_window;
++
++err:
++    free(xwl_window);
++    return NULL;
++}
++
++Bool
++xwl_realize_window(WindowPtr window)
++{
++    ScreenPtr screen = window->drawable.pScreen;
++    CompScreenPtr comp_screen = GetCompScreen(screen);
++    struct xwl_screen *xwl_screen;
++    struct xwl_window *xwl_window;
++    Bool ret;
++
++    xwl_screen = xwl_screen_get(screen);
++
++    screen->RealizeWindow = xwl_screen->RealizeWindow;
++    ret = (*screen->RealizeWindow) (window);
++    xwl_screen->RealizeWindow = screen->RealizeWindow;
++    screen->RealizeWindow = xwl_realize_window;
++
++    if (!ret)
++        return FALSE;
++
++    if (xwl_screen->rootless) {
++        /* We do not want the COW to be mapped when rootless in Xwayland */
++        if (window == comp_screen->pOverlayWin) {
++            window->mapped = FALSE;
++            return TRUE;
++        }
++
++        if (!window->parent) {
++            BoxRec box = {
++                0,
++                0,
++                400, //xwl_screen_get_width(xwl_screen),
++                300 //xwl_screen_get_height(xwl_screen)
++            };
++
++            RegionReset(&window->winSize, &box);
++            RegionNull(&window->clipList);
++            RegionNull(&window->borderClip);
++        }
++    }
++
++    xwl_window = ensure_surface_for_window(window);
++    if (!xwl_window)
++        return FALSE;
++
++    return TRUE;
++}
++
++Bool
++xwl_window_init(void)
++{
++    if (!dixRegisterPrivateKey(&xwl_window_private_key, PRIVATE_WINDOW, 0))
++        return FALSE;
++
++    if (!dixRegisterPrivateKey(&xwl_damage_private_key, PRIVATE_WINDOW, 0))
++        return FALSE;
++
++    return TRUE;
++}
+diff --git a/hw/xwindowserver/xwindowserver-window.h b/hw/xwindowserver/xwindowserver-window.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..1dcac9b3de406d9f4d39b2155a28e89051a14d8e
+--- /dev/null
++++ b/hw/xwindowserver/xwindowserver-window.h
+@@ -0,0 +1,106 @@
++/*
++ * Copyright © 2011-2014 Intel Corporation
++ *
++ * Permission to use, copy, modify, distribute, and sell this software
++ * and its documentation for any purpose is hereby granted without
++ * fee, provided that the above copyright notice appear in all copies
++ * and that both that copyright notice and this permission notice
++ * appear in supporting documentation, and that the name of the
++ * copyright holders not be used in advertising or publicity
++ * pertaining to distribution of the software without specific,
++ * written prior permission.  The copyright holders make no
++ * representations about the suitability of this software for any
++ * purpose.  It is provided "as is" without express or implied
++ * warranty.
++ *
++ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
++ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
++ * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
++ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
++ * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
++ * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
++ * SOFTWARE.
++ */
++
++#ifndef XWAYLAND_WINDOW_H
++#define XWAYLAND_WINDOW_H
++
++#include <sys/types.h>
++
++#include <stdio.h>
++#include <unistd.h>
++
++#include <X11/X.h>
++
++#include "dix/property_priv.h"
++
++#include <dix.h>
++#include <propertyst.h>
++#include <validate.h>
++
++struct xwl_wl_surface {
++    struct xorg_list link;
++};
++
++struct xwl_window_output {
++    struct xorg_list link;
++    struct xwl_output *xwl_output;
++};
++
++struct xwl_window {
++    struct xwl_screen *xwl_screen;
++    struct wp_viewport *viewport;
++    float viewport_scale_x, viewport_scale_y;
++    int surface_scale;
++    struct xdg_surface *xdg_surface;
++    struct xdg_toplevel *xdg_toplevel;
++
++    /* Top-level window for the Wayland surface:
++     * - With rootful, the root window itself
++     * - With rootless, a direct child of the root window
++     * Mainly useful when the top-level window is needed, can also be used for
++     * the X dimensions of the Wayland surface though.
++     */
++    WindowPtr toplevel;
++
++    /* The window associated with the Wayland surface:
++     * - If the top-level window has descendants which:
++     *   - Cover it completely
++     *   - Have no alpha channel
++     *   - Use a different window pixmap than their parent for storage
++     *   then the surface window is the lowest-level such descendant.
++     * - Otherwise it's the top-level window itself.
++     * Mainly useful for code dealing with (buffers for) the Wayland surface,
++     * can also be used for the X dimensions of the Wayland surface though.
++     */
++    WindowPtr surface_window;
++    RegionPtr surface_window_damage;
++
++    struct xorg_list link_damage;
++    struct xorg_list link_window;
++    Bool allow_commits;
++    struct xorg_list window_buffers_available;
++    struct xorg_list window_buffers_unavailable;
++    OsTimerPtr window_buffers_timer;
++    struct xorg_list xwl_output_list;
++    struct xorg_list frame_callback_list;
++#ifdef XWL_HAS_LIBDECOR
++    struct libdecor_frame *libdecor_frame;
++#endif
++    struct xwayland_surface_v1 *xwayland_surface;
++    /* If TRUE, the window buffer format supports scanout with implicit modifier */
++    Bool has_implicit_scanout_support;
++    struct wp_tearing_control_v1 *tearing_control;
++    struct wp_fractional_scale_v1 *fractional_scale;
++    int fractional_scale_numerator;
++    struct wp_linux_drm_syncobj_surface_v1 *surface_sync;
++};
++
++struct xwl_window *xwl_window_get(WindowPtr window);
++Bool xwl_realize_window(WindowPtr window);
++Bool xwl_unrealize_window(WindowPtr window);
++
++Bool xwl_window_init(void);
++
++#endif /* XWAYLAND_WINDOW_H */
+diff --git a/hw/xwindowserver/xwindowserver.c b/hw/xwindowserver/xwindowserver.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..3e00ceed06351a469951295141702efb3c07341b
+--- /dev/null
++++ b/hw/xwindowserver/xwindowserver.c
+@@ -0,0 +1,107 @@
++#include <stdio.h>
++#include <errno.h>
++
++#include <X11/Xatom.h>
++#include <X11/Xfuncproto.h>
++
++#include "dix/dix_priv.h"
++#include "dix/screenint_priv.h"
++#include "os/cmdline.h"
++#include "os/client_priv.h"
++#include "os/ddx_priv.h"
++#include "os/fmt.h"
++#include "os/osdep.h"
++#include "os/xserver_poll.h"
++
++#include <selection.h>
++#include <micmap.h>
++#include <misyncshm.h>
++#include <compositeext.h>
++#include <compint.h>
++#include <glx_extinit.h>
++#include <opaque.h>
++#include <os.h>
++#include <propertyst.h>
++#include <version-config.h>
++
++#include "os/auth.h"
++
++#include "xwindowserver-screen.h"
++
++void
++ddxGiveUp(enum ExitCode error)
++{
++}
++
++void
++OsVendorInit(void)
++{
++    if (serverGeneration == 1)
++        ForceClockId(CLOCK_MONOTONIC);
++}
++
++void
++OsVendorFatalError(const char *f, va_list args)
++{
++}
++
++#if defined(DDXBEFORERESET)
++void
++ddxBeforeReset(void)
++{
++    return;
++}
++#endif
++
++#if INPUTTHREAD
++/** This function is called in Xserver/os/inputthread.c when starting
++    the input thread. */
++void
++ddxInputThreadInit(void)
++{
++}
++#endif
++
++void
++ddxUseMsg(void)
++{
++    ErrorF("-rootless              run rootless\n");
++}
++
++int
++ddxProcessArgument(int argc, char *argv[], int i)
++{
++    if (strcmp(argv[i], "-rootless") == 0)
++        return 1;
++    return 0;
++}
++
++void
++InitOutput(ScreenInfo * screen_info, int argc, char **argv)
++{
++    int depths[] = { 1, 4, 8, 15, 16, 24, 32 };
++    int bpp[] =    { 1, 8, 8, 16, 16, 32, 32 };
++    int i;
++
++    for (i = 0; i < ARRAY_SIZE(depths); i++) {
++        screen_info->formats[i].depth = depths[i];
++        screen_info->formats[i].bitsPerPixel = bpp[i];
++        screen_info->formats[i].scanlinePad = BITMAP_SCANLINE_PAD;
++    }
++
++    screen_info->imageByteOrder = IMAGE_BYTE_ORDER;
++    screen_info->bitmapScanlineUnit = BITMAP_SCANLINE_UNIT;
++    screen_info->bitmapScanlinePad = BITMAP_SCANLINE_PAD;
++    screen_info->bitmapBitOrder = BITMAP_BIT_ORDER;
++    screen_info->numPixmapFormats = ARRAY_SIZE(depths);
++
++    if (AddScreen(xwl_screen_init, argc, argv) == -1) {
++        FatalError("Couldn't add screen\n");
++    }
++
++    xorgGlxCreateVendor();
++
++    LocalAccessScopeUser();
++}
++
++
+diff --git a/meson.build b/meson.build
+index abab17ed338b3ca169404f77a4ed555a266b28ff..1a0d0538e04c6e5ad9aecec1f4cffc24cc9fbcba 100644
+--- a/meson.build
++++ b/meson.build
+@@ -1,4 +1,4 @@
+-project('xserver', 'c',
++project('xserver', ['c', 'cpp'],
+         default_options: [
+             'buildtype=debugoptimized',
+             'c_std=gnu99',
+@@ -273,6 +273,15 @@ else
+     build_xwin = get_option('xwin') == 'true'
+ endif
+ 
++build_xwindowserver = false
++if get_option('xwindowserver') == 'auto'
++    if host_machine.system() == 'serenity'
++        build_xwindowserver = true
++    endif
++else
++    build_xwindowserver = get_option('xwindowserver') == 'true'
++endif
++
+ build_xquartz = false
+ if get_option('xquartz') == 'auto'
+     if host_machine.system() == 'darwin'
+@@ -296,6 +305,7 @@ summary({
+         'Xnest': build_xnest,
+         'Xvfb': build_xvfb,
+         'Xwin': build_xwin,
++        'XWindowServer': build_xwindowserver,
+         'Xquartz': build_xquartz,
+     },
+     section: 'DDX',
+diff --git a/meson_options.txt b/meson_options.txt
+index 94698f218e7696cd3a86dd6f56e7ead33e91bc68..fb81d01d93a88d20931e40945447f2591423e2f4 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -14,6 +14,8 @@ option('xvfb', type: 'boolean', value: true,
+        description: 'Enable Xvfb X server')
+ option('xwin', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
+        description: 'Enable XWin X server')
++option('xwindowserver', type: 'combo', choices: ['true', 'false', 'auto'],
++       value: 'auto', description: 'Enable XWindowServer X Server')
+ option('xquartz', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
+        description: 'Enable Xquartz X server')
+ 

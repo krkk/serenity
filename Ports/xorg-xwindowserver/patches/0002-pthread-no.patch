@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Mon, 4 Aug 2025 20:59:24 +0200
+Subject: [PATCH] pthread no
+
+---
+ os/meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/os/meson.build b/os/meson.build
+index e12e2c9e7f223edd264add8582b67b22c9de83cb..9e3523bb878ce0e366cb76e410d9a8402650758d 100644
+--- a/os/meson.build
++++ b/os/meson.build
+@@ -80,7 +80,7 @@ if srcs_libc.length() > 0
+ endif
+ 
+ if enable_input_thread
+-    os_dep += cc.find_library('pthread')
++    #os_dep += cc.find_library('pthread')
+ endif
+ 
+ libxserver_os = static_library('libxserver_os',
