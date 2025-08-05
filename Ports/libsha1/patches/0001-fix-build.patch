@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Karol Kosek <krkk@serenityos.org>
+Date: Tue, 5 Aug 2025 12:18:03 +0200
+Subject: [PATCH] fix build
+
+---
+ test.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test.c b/test.c
+index 21a652528fcfd618c0ffca3a62058f659801711b..1ec89d3d6d213738fdb78a50bd81e5e91eb72b92 100644
+--- a/test.c
++++ b/test.c
+@@ -11,7 +11,7 @@ static void print_hex(const char* data, size_t size)
+         printf("%x%x", ((unsigned char)data[i])/16, ((unsigned char)data[i])%16);
+ }
+ 
+-static num_test;
++static int num_test;
+ 
+ static int do_test(const char* data, size_t size, const char* expected_dgst)
+ {
