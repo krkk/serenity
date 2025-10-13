@@ -386,7 +386,7 @@ fetch_git() {
     run_nocd git init --bare "${backing_copy}"
     run_nocd git -C "${backing_copy}" config core.autocrlf false
     run_nocd git -C "${backing_copy}" worktree prune
-    run_nocd git -C "${backing_copy}" fetch --tags "${repository}" "${revision}"
+    #run_nocd git -C "${backing_copy}" fetch --tags "${repository}" "${revision}"
 
     revision="$(git -C "${backing_copy}" rev-parse FETCH_HEAD)"
 
