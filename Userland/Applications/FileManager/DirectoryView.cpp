@@ -121,6 +121,77 @@ void DirectoryView::handle_activation(GUI::ModelIndex const& index)
     }
 }
 
+void DirectoryView::context_menu_request(GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event)
+{
+    m_open_terminal_action->set_text(index.is_valid() ? "Open in &Terminal" : "Open &Terminal Here");
+
+    if (!index.is_valid()) {
+        m_empty_space_context_menu->popup(event.screen_position());
+        return;
+    }
+    VERIFY(prepare_context_menu);
+    RefPtr<GUI::Action> default_action;
+    m_context_menu = GUI::Menu::construct("Directory View"_string);
+    auto& node_index = node(index);
+
+    if (node_index.is_directory()) {
+        if (is_desktop()) {
+            default_action = m_open_window_action;
+        } else {
+            default_action = m_open_directory_action;
+            m_context_menu->add_action(*m_open_directory_action);
+        }
+        m_context_menu->add_action(*m_open_window_action);
+        m_context_menu->add_action(*m_open_terminal_action);
+        m_context_menu->add_separator();
+    } else {
+        bool added_launch_file_handlers = add_launch_handler_actions_to_menu(node_index.full_path(), default_action);
+        if (added_launch_file_handlers)
+            m_context_menu->add_separator();
+    }
+
+    prepare_context_menu(*m_context_menu, node_index);
+    m_context_menu->popup(event.screen_position(), default_action);
+}
+
+bool DirectoryView::add_launch_handler_actions_to_menu(ByteString const& full_path, RefPtr<GUI::Action>& default_action)
+{
+    auto current_file_launch_handlers = get_launch_handlers(full_path);
+
+    bool added_open_menu_items = false;
+    auto default_file_handler = get_default_launch_handler(current_file_launch_handlers);
+    if (default_file_handler) {
+        auto file_open_action = default_file_handler->create_launch_action([this, full_path = move(full_path)](auto& launcher_handler) {
+            launch(URL::create_with_file_scheme(full_path), launcher_handler);
+        });
+        if (default_file_handler->details().launcher_type == Desktop::Launcher::LauncherType::Application)
+            file_open_action->set_text(ByteString::formatted("Run {}", file_open_action->text()));
+        else
+            file_open_action->set_text(ByteString::formatted("Open in {}", file_open_action->text()));
+
+        default_action = file_open_action;
+
+        m_context_menu->add_action(move(file_open_action));
+        added_open_menu_items = true;
+    } else {
+        default_action.clear();
+    }
+
+    if (current_file_launch_handlers.size() > 1) {
+        added_open_menu_items = true;
+        auto file_open_with_menu = m_context_menu->add_submenu("Open with"_string);
+        for (auto& handler : current_file_launch_handlers) {
+            if (handler == default_file_handler)
+                continue;
+            file_open_with_menu->add_action(handler->create_launch_action([this, full_path = move(full_path)](auto& launcher_handler) {
+                launch(URL::create_with_file_scheme(full_path), launcher_handler);
+            }));
+        }
+    }
+
+    return added_open_menu_items;
+}
+
 DirectoryView::DirectoryView(Mode mode)
     : m_mode(mode)
     , m_model(GUI::FileSystemModel::create({}))
@@ -241,8 +312,7 @@ void DirectoryView::setup_icon_view()
         handle_selection_change();
     };
     m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
-        if (on_context_menu_request)
-            on_context_menu_request(index, event);
+        context_menu_request(index, event);
     };
     m_icon_view->on_drop = [this](auto& index, auto& event) {
         handle_drop(index, event);
@@ -272,8 +342,7 @@ void DirectoryView::setup_columns_view()
     };
 
     m_columns_view->on_context_menu_request = [this](auto& index, auto& event) {
-        if (on_context_menu_request)
-            on_context_menu_request(index, event);
+        context_menu_request(index, event);
     };
 
     m_columns_view->on_drop = [this](auto& index, auto& event) {
@@ -316,8 +385,7 @@ void DirectoryView::setup_table_view()
     };
 
     m_table_view->on_context_menu_request = [this](auto& index, auto& event) {
-        if (on_context_menu_request)
-            on_context_menu_request(index, event);
+        context_menu_request(index, event);
     };
 
     m_table_view->on_drop = [this](auto& index, auto& event) {
@@ -621,6 +689,26 @@ void DirectoryView::setup_actions()
             }
             rc = close(fd);
             VERIFY(rc >= 0);
+        }
+    });
+
+    if (!is_desktop()) {
+        m_open_directory_action = GUI::Action::create("Open", Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+            open(selected_file_paths().first());
+        });
+    }
+
+    auto open_window_text = is_desktop() ? "Open in File &Manager" : "Open in New &Window";
+    m_open_window_action = GUI::Action::create(open_window_text, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        auto paths = selected_file_paths();
+        if (paths.is_empty()) {
+            Desktop::Launcher::open(URL::create_with_file_scheme(path()));
+            return;
+        }
+
+        for (auto const& path : paths) {
+            if (FileSystem::is_directory(path))
+                Desktop::Launcher::open(URL::create_with_file_scheme(path));
         }
     });
 
