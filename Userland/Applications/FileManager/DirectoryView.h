@@ -13,6 +13,7 @@
 #include <LibGUI/ColumnsView.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/IconView.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibURL/URL.h>
@@ -68,7 +69,6 @@ public:
 
     Function<void(StringView path, bool can_read_in_path, bool can_write_in_path)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;
-    Function<void(GUI::ModelIndex const&, GUI::ContextMenuEvent const&)> on_context_menu_request;
     Function<void(StringView)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
 
@@ -121,6 +121,15 @@ public:
 
     Vector<ByteString> selected_file_paths() const;
 
+    template<typename Callback>
+    void setup_empty_space_context_menu(Callback callback)
+    {
+        VERIFY(!m_empty_space_context_menu);
+        m_empty_space_context_menu = GUI::Menu::construct("Directory View"_string);
+        callback(*m_empty_space_context_menu);
+    }
+    Function<void(GUI::Menu& menu, GUI::FileSystemModel::Node const& node)> prepare_context_menu;
+
     GUI::Action& mkdir_action() { return *m_mkdir_action; }
     GUI::Action& touch_action() { return *m_touch_action; }
     GUI::Action& open_terminal_action() { return *m_open_terminal_action; }
@@ -154,6 +163,8 @@ private:
     void setup_table_view();
 
     void handle_activation(GUI::ModelIndex const&);
+    void context_menu_request(GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event);
+    bool add_launch_handler_actions_to_menu(ByteString const& full_path, RefPtr<GUI::Action>& default_action);
 
     void set_status_message(StringView);
     void update_statusbar();
@@ -176,10 +187,16 @@ private:
 
     RefPtr<GUI::Action> m_mkdir_action;
     RefPtr<GUI::Action> m_touch_action;
+    RefPtr<GUI::Action> m_open_directory_action;
+    RefPtr<GUI::Action> m_open_window_action;
     RefPtr<GUI::Action> m_open_terminal_action;
     RefPtr<GUI::Action> m_delete_action;
     RefPtr<GUI::Action> m_force_delete_action;
     RefPtr<GUI::Action> m_rename_action;
+
+    RefPtr<GUI::Menu> m_empty_space_context_menu;
+    RefPtr<GUI::Menu> m_context_menu;
+    Vector<NonnullRefPtr<LauncherHandler>> m_current_file_handlers;
 
     RefPtr<GUI::Action> m_view_as_table_action;
     RefPtr<GUI::Action> m_view_as_icons_action;
