@@ -624,8 +624,17 @@ void DirectoryView::setup_actions()
         }
     });
 
-    m_open_terminal_action = GUI::Action::create("Open &Terminal Here", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        spawn_terminal(window(), path());
+    m_open_terminal_action = GUI::Action::create("Open in &Terminal", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        auto paths = selected_file_paths();
+        if (paths.is_empty()) {
+            spawn_terminal(window(), path());
+            return;
+        }
+
+        for (auto const& path : paths) {
+            if (FileSystem::is_directory(path))
+                spawn_terminal(window(), path);
+        }
     });
 
     m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) { do_delete(true); }, window());
