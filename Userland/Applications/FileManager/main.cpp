@@ -492,20 +492,6 @@ ErrorOr<int> run_in_desktop_mode()
         }
     });
 
-    auto open_terminal_action = GUI::Action::create("Open in &Terminal", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv)), [&](auto&) {
-        auto paths = directory_view->selected_file_paths();
-        if (paths.is_empty()) {
-            spawn_terminal(window, directory_view->path());
-            return;
-        }
-
-        for (auto& path : paths) {
-            if (FileSystem::is_directory(path)) {
-                spawn_terminal(window, path);
-            }
-        }
-    });
-
     auto display_properties_action = GUI::Action::create("&Display Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"sv)), [&](GUI::Action const&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/bin/DisplaySettings"));
     });
@@ -515,14 +501,14 @@ ErrorOr<int> run_in_desktop_mode()
     desktop_view_context_menu->add_action(paste_action);
     desktop_view_context_menu->add_separator();
     desktop_view_context_menu->add_action(file_manager_action);
-    desktop_view_context_menu->add_action(open_terminal_action);
+    desktop_view_context_menu->add_action(directory_view->open_terminal_action());
     desktop_view_context_menu->add_separator();
     desktop_view_context_menu->add_action(display_properties_action);
 
     auto desktop_context_menu = GUI::Menu::construct("Directory View Directory"_string);
 
     desktop_context_menu->add_action(file_manager_action);
-    desktop_context_menu->add_action(open_terminal_action);
+    desktop_context_menu->add_action(directory_view->open_terminal_action());
     desktop_context_menu->add_separator();
     desktop_context_menu->add_action(cut_action);
     desktop_context_menu->add_action(copy_action);
@@ -1169,6 +1155,10 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     directory_view_context_menu->add_action(show_dotfiles_action);
     directory_view_context_menu->add_separator();
     directory_view_context_menu->add_action(properties_action);
+    directory_view_context_menu->on_visibility_change = [&](bool visible) {
+        if (!visible)
+            directory_view->open_terminal_action().set_text("Open in &Terminal");
+    };
 
     tree_view_directory_context_menu->add_action(open_in_new_window_action);
     tree_view_directory_context_menu->add_action(open_in_new_terminal_action);
@@ -1225,6 +1215,7 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
                 file_context_menu->popup(event.screen_position(), file_context_menu_action_default_action);
             }
         } else {
+            directory_view->open_terminal_action().set_text("Open &Terminal Here");
             directory_view_context_menu->popup(event.screen_position());
         }
     };
