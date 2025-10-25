@@ -438,19 +438,6 @@ ErrorOr<int> run_in_desktop_mode()
         paste_action->set_enabled(data_type == "text/uri-list" && access(directory_view->path().characters(), W_OK) == 0);
     };
 
-    auto file_manager_action = GUI::Action::create("Open in File &Manager", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [&](auto&) {
-        auto paths = directory_view->selected_file_paths();
-        if (paths.is_empty()) {
-            Desktop::Launcher::open(URL::create_with_file_scheme(directory_view->path()));
-            return;
-        }
-
-        for (auto& path : paths) {
-            if (FileSystem::is_directory(path))
-                Desktop::Launcher::open(URL::create_with_file_scheme(path));
-        }
-    });
-
     auto display_properties_action = GUI::Action::create("&Display Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"sv)), [&](GUI::Action const&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/bin/DisplaySettings"));
     });
@@ -460,7 +447,7 @@ ErrorOr<int> run_in_desktop_mode()
         menu.add_action(directory_view->touch_action());
         menu.add_action(paste_action);
         menu.add_separator();
-        menu.add_action(file_manager_action);
+        menu.add_action(directory_view->open_window_action());
         menu.add_action(directory_view->open_terminal_action());
         menu.add_separator();
         menu.add_action(display_properties_action);

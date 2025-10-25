@@ -132,6 +132,7 @@ public:
 
     GUI::Action& mkdir_action() { return *m_mkdir_action; }
     GUI::Action& touch_action() { return *m_touch_action; }
+    GUI::Action& open_window_action() { return *m_open_window_action; }
     GUI::Action& open_terminal_action() { return *m_open_terminal_action; }
     GUI::Action& delete_action() { return *m_delete_action; }
     GUI::Action& force_delete_action() { return *m_force_delete_action; }
