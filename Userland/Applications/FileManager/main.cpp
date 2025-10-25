@@ -720,42 +720,27 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
         },
         window);
 
-    auto open_in_new_window_action
+    auto tree_view_open_in_new_window_action
         = GUI::Action::create(
             "Open in New &Window",
             {},
             TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)),
-            [&](GUI::Action const& action) {
-                Vector<ByteString> paths;
-                if (action.activator() == tree_view_directory_context_menu)
-                    paths = tree_view_selected_file_paths();
-                else
-                    paths = directory_view->selected_file_paths();
-
-                for (auto& path : paths) {
-                    if (FileSystem::is_directory(path))
-                        Desktop::Launcher::open(URL::create_with_file_scheme(path));
-                }
+            [&](GUI::Action const&) {
+                auto path = tree_view_selected_file_paths().first();
+                VERIFY(FileSystem::is_directory(path));
+                Desktop::Launcher::open(URL::create_with_file_scheme(path));
             },
             window);
 
-    auto open_in_new_terminal_action
+    auto tree_view_open_in_new_terminal_action
         = GUI::Action::create(
             "Open in &Terminal",
             {},
             TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv)),
-            [&](GUI::Action const& action) {
-                Vector<ByteString> paths;
-                if (action.activator() == tree_view_directory_context_menu)
-                    paths = tree_view_selected_file_paths();
-                else
-                    paths = directory_view->selected_file_paths();
-
-                for (auto& path : paths) {
-                    if (FileSystem::is_directory(path)) {
-                        spawn_terminal(window, path);
-                    }
-                }
+            [&](GUI::Action const&) {
+                auto path = tree_view_selected_file_paths().first();
+                VERIFY(FileSystem::is_directory(path));
+                spawn_terminal(window, path);
             },
             window);
 
@@ -1058,8 +1043,8 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             || (!directory_view->current_view().selection().is_empty() && access(directory_view->path().characters(), W_OK) == 0));
     };
 
-    tree_view_directory_context_menu->add_action(open_in_new_window_action);
-    tree_view_directory_context_menu->add_action(open_in_new_terminal_action);
+    tree_view_directory_context_menu->add_action(tree_view_open_in_new_window_action);
+    tree_view_directory_context_menu->add_action(tree_view_open_in_new_terminal_action);
     tree_view_directory_context_menu->add_separator();
     tree_view_directory_context_menu->add_action(directory_view->mkdir_action());
     tree_view_directory_context_menu->add_action(directory_view->touch_action());
