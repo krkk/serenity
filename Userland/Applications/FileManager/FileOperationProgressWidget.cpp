@@ -18,36 +18,38 @@
 
 namespace FileManager {
 
-FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation, NonnullOwnPtr<Core::InputBufferedFile> helper_pipe, int helper_pipe_fd)
-    : m_operation(operation)
-    , m_helper_pipe(move(helper_pipe))
+ErrorOr<void> FileOperationProgressWidget::initialize()
 {
-    load_from_gml(file_operation_progress_gml).release_value_but_fixme_should_propagate_errors();
-
-    auto& button = *find_descendant_of_type_named<GUI::Button>("button");
-
     auto& file_copy_animation = *find_descendant_of_type_named<GUI::ImageWidget>("file_copy_animation");
     file_copy_animation.load_from_file("/res/graphics/file-flying-animation.gif"sv);
     file_copy_animation.animate();
-
+    
     auto& source_folder_icon = *find_descendant_of_type_named<GUI::ImageWidget>("source_folder_icon");
     source_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png"sv);
-
+    
     auto& destination_folder_icon = *find_descendant_of_type_named<GUI::ImageWidget>("destination_folder_icon");
-
+    
     switch (m_operation) {
-    case FileOperation::Delete:
+        case FileOperation::Delete:
         destination_folder_icon.load_from_file("/res/icons/32x32/recycle-bin.png"sv);
         break;
     default:
         destination_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png"sv);
         break;
     }
-
+    
+    auto& button = *find_descendant_of_type_named<GUI::Button>("button");
     button.on_click = [this](auto) {
         close_pipe();
         window()->close();
     };
+    return {};
+}
+
+void FileOperationProgressWidget::set_operation(FileOperation operation, NonnullOwnPtr<Core::InputBufferedFile> helper_pipe, int helper_pipe_fd)
+{
+    m_operation = operation;
+    m_helper_pipe = move(helper_pipe);
 
     auto& files_copied_label = *find_descendant_of_type_named<GUI::Label>("files_copied_label");
     auto& current_file_action_label = *find_descendant_of_type_named<GUI::Label>("current_file_action_label");
