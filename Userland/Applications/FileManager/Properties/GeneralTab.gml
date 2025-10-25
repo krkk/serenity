@@ -1,4 +1,4 @@
-@GUI::Widget {
+@FileManager::Properties::GeneralTab {
     layout: @GUI::VerticalBoxLayout {
         margins: [8, 12]
         spacing: 10

@@ -1,4 +1,4 @@
-@GUI::Widget {
+@FileManager::Properties::AudioTab {
     layout: @GUI::VerticalBoxLayout {
         margins: [8]
         spacing: 12

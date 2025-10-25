@@ -7,12 +7,12 @@ serenity_component(
 
 stringify_gml(FileManagerWindow.gml FileManagerWindowGML.h file_manager_window_gml)
 stringify_gml(FileOperationProgress.gml FileOperationProgressGML.h file_operation_progress_gml)
-stringify_gml(PropertiesWindowArchiveTab.gml PropertiesWindowArchiveTabGML.h properties_window_archive_tab_gml)
-stringify_gml(PropertiesWindowAudioTab.gml PropertiesWindowAudioTabGML.h properties_window_audio_tab_gml)
-stringify_gml(PropertiesWindowFontTab.gml PropertiesWindowFontTabGML.h properties_window_font_tab_gml)
-stringify_gml(PropertiesWindowGeneralTab.gml PropertiesWindowGeneralTabGML.h properties_window_general_tab_gml)
-stringify_gml(PropertiesWindowImageTab.gml PropertiesWindowImageTabGML.h properties_window_image_tab_gml)
-stringify_gml(PropertiesWindowPDFTab.gml PropertiesWindowPDFTabGML.h properties_window_pdf_tab_gml)
+compile_gml(Properties/ArchiveTab.gml Properties/ArchiveTabGML.cpp)
+compile_gml(Properties/AudioTab.gml Properties/AudioTabGML.cpp)
+compile_gml(Properties/FontTab.gml Properties/FontTabGML.cpp)
+compile_gml(Properties/GeneralTab.gml Properties/GeneralTabGML.cpp)
+compile_gml(Properties/ImageTab.gml Properties/ImageTabGML.cpp)
+compile_gml(Properties/PDFTab.gml Properties/PDFTabGML.cpp)
 
 set(SOURCES
     DesktopWidget.cpp
@@ -20,18 +20,18 @@ set(SOURCES
     FileOperationProgressWidget.cpp
     FileUtils.cpp
     main.cpp
-    PropertiesWindow.cpp
+    Properties/PropertiesWindow.cpp
+    Properties/ArchiveTabGML.cpp
+    Properties/AudioTabGML.cpp
+    Properties/FontTabGML.cpp
+    Properties/GeneralTabGML.cpp
+    Properties/ImageTabGML.cpp
+    Properties/PDFTabGML.cpp
 )
 
 set(GENERATED_SOURCES
     FileManagerWindowGML.h
     FileOperationProgressGML.h
-    PropertiesWindowArchiveTabGML.h
-    PropertiesWindowAudioTabGML.h
-    PropertiesWindowFontTabGML.h
-    PropertiesWindowGeneralTabGML.h
-    PropertiesWindowImageTabGML.h
-    PropertiesWindowPDFTabGML.h
 )
 
 serenity_app(FileManager ICON app-file-manager)

@@ -10,7 +10,7 @@
 #include "DesktopWidget.h"
 #include "DirectoryView.h"
 #include "FileUtils.h"
-#include "PropertiesWindow.h"
+#include "Properties/PropertiesWindow.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
