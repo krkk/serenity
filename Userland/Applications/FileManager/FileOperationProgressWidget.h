@@ -14,14 +14,18 @@
 namespace FileManager {
 
 class FileOperationProgressWidget : public GUI::Widget {
-    C_OBJECT(FileOperationProgressWidget);
+    C_OBJECT_ABSTRACT(FileOperationProgressWidget);
 
 public:
     virtual ~FileOperationProgressWidget() override;
+    static ErrorOr<NonnullRefPtr<FileOperationProgressWidget>> try_create();
+    ErrorOr<void> initialize();
+
+    // FIXME: The helper_pipe_fd parameter is only needed because we can't get the fd from a Core::Stream.
+    void set_operation(FileOperation, NonnullOwnPtr<Core::InputBufferedFile> helper_pipe, int helper_pipe_fd);
 
 private:
-    // FIXME: The helper_pipe_fd parameter is only needed because we can't get the fd from a Core::Stream.
-    FileOperationProgressWidget(FileOperation, NonnullOwnPtr<Core::InputBufferedFile> helper_pipe, int helper_pipe_fd);
+    FileOperationProgressWidget() = default;
 
     void did_finish();
     void did_error(StringView message);

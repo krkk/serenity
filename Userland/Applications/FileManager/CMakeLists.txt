@@ -6,7 +6,7 @@ serenity_component(
 )
 
 stringify_gml(FileManagerWindow.gml FileManagerWindowGML.h file_manager_window_gml)
-stringify_gml(FileOperationProgress.gml FileOperationProgressGML.h file_operation_progress_gml)
+compile_gml(FileOperationProgressWidget.gml FileOperationProgressWidgetGML.cpp)
 compile_gml(Properties/ArchiveTab.gml Properties/ArchiveTabGML.cpp)
 compile_gml(Properties/AudioTab.gml Properties/AudioTabGML.cpp)
 compile_gml(Properties/FontTab.gml Properties/FontTabGML.cpp)
@@ -18,6 +18,7 @@ set(SOURCES
     DesktopWidget.cpp
     DirectoryView.cpp
     FileOperationProgressWidget.cpp
+    FileOperationProgressWidgetGML.cpp
     FileUtils.cpp
     main.cpp
     Properties/PropertiesWindow.cpp
@@ -31,7 +32,6 @@ set(SOURCES
 
 set(GENERATED_SOURCES
     FileManagerWindowGML.h
-    FileOperationProgressGML.h
 )
 
 serenity_app(FileManager ICON app-file-manager)
