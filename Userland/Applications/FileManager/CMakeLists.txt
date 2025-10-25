@@ -5,7 +5,7 @@ serenity_component(
     DEPENDS FileOperation
 )
 
-stringify_gml(FileManagerWindow.gml FileManagerWindowGML.h file_manager_window_gml)
+compile_gml(WindowWidget.gml WindowWidgetGML.cpp)
 compile_gml(FileOperationProgressWidget.gml FileOperationProgressWidgetGML.cpp)
 compile_gml(Properties/ArchiveTab.gml Properties/ArchiveTabGML.cpp)
 compile_gml(Properties/AudioTab.gml Properties/AudioTabGML.cpp)
@@ -28,10 +28,8 @@ set(SOURCES
     Properties/GeneralTabGML.cpp
     Properties/ImageTabGML.cpp
     Properties/PDFTabGML.cpp
-)
-
-set(GENERATED_SOURCES
-    FileManagerWindowGML.h
+    WindowWidget.cpp
+    WindowWidgetGML.cpp
 )
 
 serenity_app(FileManager ICON app-file-manager)
