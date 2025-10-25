@@ -1,11 +1,11 @@
-@GUI::Widget {
+@FileManager::Properties::ImageTab {
     layout: @GUI::VerticalBoxLayout {
         margins: [8]
         spacing: 12
     }
 
     @GUI::GroupBox {
-        title: "PDF"
+        title: "Image"
         preferred_height: "shrink"
         layout: @GUI::VerticalBoxLayout {
             margins: [12, 8, 0]
@@ -18,13 +18,14 @@
             }
 
             @GUI::Label {
-                text: "Version:"
+                text: "Type:"
                 text_alignment: "TopLeft"
                 fixed_width: 80
             }
 
             @GUI::Label {
-                name: "pdf_version"
+                name: "image_type"
+                text: "JPEG"
                 text_alignment: "TopLeft"
             }
         }
@@ -35,13 +36,14 @@
             }
 
             @GUI::Label {
-                text: "Page count:"
+                text: "Size:"
                 text_alignment: "TopLeft"
                 fixed_width: 80
             }
 
             @GUI::Label {
-                name: "pdf_page_count"
+                name: "image_size"
+                text: "1920 x 1080"
                 text_alignment: "TopLeft"
             }
         }
@@ -52,13 +54,62 @@
             }
 
             @GUI::Label {
-                text: "Title:"
+                text: "Animation:"
                 text_alignment: "TopLeft"
                 fixed_width: 80
             }
 
             @GUI::Label {
-                name: "pdf_title"
+                name: "image_animation"
+                text: "Loop indefinitely (12 frames)"
+                text_alignment: "TopLeft"
+                text_wrapping: "DontWrap"
+            }
+        }
+
+        @GUI::Widget {
+            name: "image_has_icc_line"
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 12
+            }
+
+            @GUI::Label {
+                text: "ICC profile:"
+                text_alignment: "TopLeft"
+                fixed_width: 80
+            }
+
+            @GUI::Label {
+                name: "image_has_icc_profile"
+                text: "See below"
+                text_alignment: "TopLeft"
+            }
+        }
+    }
+
+    @GUI::GroupBox {
+        name: "image_icc_group"
+        title: "ICC Profile"
+        preferred_height: "shrink"
+        layout: @GUI::VerticalBoxLayout {
+            margins: [12, 8, 0]
+            spacing: 2
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 12
+            }
+
+            @GUI::Label {
+                text: "Profile:"
+                text_alignment: "TopLeft"
+                fixed_width: 80
+            }
+
+            @GUI::Label {
+                name: "image_icc_profile"
+                text: "e-sRGB"
                 text_alignment: "TopLeft"
             }
         }
@@ -69,13 +120,33 @@
             }
 
             @GUI::Label {
-                text: "Author:"
+                text: "Copyright:"
                 text_alignment: "TopLeft"
                 fixed_width: 80
             }
 
             @GUI::Label {
-                name: "pdf_author"
+                name: "image_icc_copyright"
+                text: "(c) 1999 Adobe Systems Inc."
+                text_alignment: "TopLeft"
+                text_wrapping: "DontWrap"
+            }
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 12
+            }
+
+            @GUI::Label {
+                text: "Color space:"
+                text_alignment: "TopLeft"
+                fixed_width: 80
+            }
+
+            @GUI::Label {
+                name: "image_icc_color_space"
+                text: "RGB"
                 text_alignment: "TopLeft"
             }
         }
@@ -86,100 +157,37 @@
             }
 
             @GUI::Label {
-                text: "Subject:"
+                text: "Device class:"
                 text_alignment: "TopLeft"
                 fixed_width: 80
             }
 
             @GUI::Label {
-                name: "pdf_subject"
+                name: "image_icc_device_class"
+                text: "DisplayDevice"
                 text_alignment: "TopLeft"
             }
         }
+    }
 
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                spacing: 12
-            }
-
-            @GUI::Label {
-                text: "Keywords:"
-                text_alignment: "TopLeft"
-                fixed_width: 80
-            }
-
-            @GUI::Label {
-                name: "pdf_keywords"
-                text_alignment: "TopLeft"
-            }
+    @GUI::GroupBox {
+        name: "image_basic_metadata"
+        title: "Basic Metadata"
+        preferred_height: "shrink"
+        visible: false
+        layout: @GUI::VerticalBoxLayout {
+            margins: [12, 8, 0]
+            spacing: 2
         }
+    }
 
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                spacing: 12
-            }
-
-            @GUI::Label {
-                text: "Creator:"
-                text_alignment: "TopLeft"
-                fixed_width: 80
-            }
-
-            @GUI::Label {
-                name: "pdf_creator"
-                text_alignment: "TopLeft"
-            }
-        }
-
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                spacing: 12
-            }
-
-            @GUI::Label {
-                text: "Producer:"
-                text_alignment: "TopLeft"
-                fixed_width: 80
-            }
-
-            @GUI::Label {
-                name: "pdf_producer"
-                text_alignment: "TopLeft"
-            }
-        }
-
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                spacing: 12
-            }
-
-            @GUI::Label {
-                text: "Created:"
-                text_alignment: "TopLeft"
-                fixed_width: 80
-            }
-
-            @GUI::Label {
-                name: "pdf_creation_date"
-                text_alignment: "TopLeft"
-            }
-        }
-
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                spacing: 12
-            }
-
-            @GUI::Label {
-                text: "Modified:"
-                text_alignment: "TopLeft"
-                fixed_width: 80
-            }
-
-            @GUI::Label {
-                name: "pdf_modification_date"
-                text_alignment: "TopLeft"
-            }
+    @GUI::GroupBox {
+        name: "image_gps"
+        title: "GPS Location"
+        preferred_height: 200
+        visible: false
+        layout: @GUI::VerticalBoxLayout {
+            margins: [8]
         }
     }
 }

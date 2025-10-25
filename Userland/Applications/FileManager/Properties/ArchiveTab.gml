@@ -1,11 +1,11 @@
-@GUI::Widget {
+@FileManager::Properties::ArchiveTab {
     layout: @GUI::VerticalBoxLayout {
         margins: [8]
         spacing: 12
     }
 
     @GUI::GroupBox {
-        title: "Font"
+        title: "Archive"
         preferred_height: "shrink"
         layout: @GUI::VerticalBoxLayout {
             margins: [12, 8, 0]
@@ -24,8 +24,8 @@
             }
 
             @GUI::Label {
-                name: "font_format"
-                text: "TrueType"
+                name: "archive_format"
+                text: "ZIP"
                 text_alignment: "TopLeft"
             }
         }
@@ -36,14 +36,14 @@
             }
 
             @GUI::Label {
-                text: "Family:"
+                text: "Files:"
                 text_alignment: "TopLeft"
                 fixed_width: 80
             }
 
             @GUI::Label {
-                name: "font_family"
-                text: "SerenitySans"
+                name: "archive_file_count"
+                text: "42"
                 text_alignment: "TopLeft"
             }
         }
@@ -54,14 +54,14 @@
             }
 
             @GUI::Label {
-                text: "Fixed width:"
+                text: "Directories:"
                 text_alignment: "TopLeft"
                 fixed_width: 80
             }
 
             @GUI::Label {
-                name: "font_fixed_width"
-                text: "No"
+                name: "archive_directory_count"
+                text: "7"
                 text_alignment: "TopLeft"
             }
         }
@@ -72,50 +72,14 @@
             }
 
             @GUI::Label {
-                text: "Width:"
+                text: "Uncompressed:"
                 text_alignment: "TopLeft"
                 fixed_width: 80
             }
 
             @GUI::Label {
-                name: "font_width"
-                text: "Normal"
-                text_alignment: "TopLeft"
-            }
-        }
-
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                spacing: 12
-            }
-
-            @GUI::Label {
-                text: "Weight:"
-                text_alignment: "TopLeft"
-                fixed_width: 80
-            }
-
-            @GUI::Label {
-                name: "font_weight"
-                text: "500 (Medium)"
-                text_alignment: "TopLeft"
-            }
-        }
-
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                spacing: 12
-            }
-
-            @GUI::Label {
-                text: "Slope:"
-                text_alignment: "TopLeft"
-                fixed_width: 80
-            }
-
-            @GUI::Label {
-                name: "font_slope"
-                text: "Regular"
+                name: "archive_uncompressed_size"
+                text: "3.3 MiB"
                 text_alignment: "TopLeft"
             }
         }

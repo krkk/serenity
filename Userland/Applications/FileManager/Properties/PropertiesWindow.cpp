@@ -7,16 +7,16 @@
  */
 
 #include "PropertiesWindow.h"
+#include "ArchiveTab.h"
+#include "AudioTab.h"
+#include "FontTab.h"
+#include "GeneralTab.h"
+#include "ImageTab.h"
+#include "PDFTab.h"
 #include <AK/GenericShorthands.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <Applications/FileManager/DirectoryView.h>
-#include <Applications/FileManager/PropertiesWindowArchiveTabGML.h>
-#include <Applications/FileManager/PropertiesWindowAudioTabGML.h>
-#include <Applications/FileManager/PropertiesWindowFontTabGML.h>
-#include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
-#include <Applications/FileManager/PropertiesWindowImageTabGML.h>
-#include <Applications/FileManager/PropertiesWindowPDFTabGML.h>
 #include <LibArchive/Zip.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/Directory.h>
@@ -124,9 +124,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 
 ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, bool disable_rename)
 {
-    auto& general_tab = tab_widget.add_tab<GUI::Widget>("General"_string);
-    TRY(general_tab.load_from_gml(properties_window_general_tab_gml));
-
+    auto& general_tab = *TRY(tab_widget.try_add_tab<FileManager::Properties::GeneralTab>("General"_string));
     m_icon = general_tab.find_descendant_of_type_named<GUI::ImageWidget>("icon");
 
     m_name_box = general_tab.find_descendant_of_type_named<GUI::TextBox>("name");
@@ -261,9 +259,7 @@ ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, N
     }
     auto zip = maybe_zip.release_value();
 
-    auto& tab = tab_widget.add_tab<GUI::Widget>("Archive"_string);
-    TRY(tab.load_from_gml(properties_window_archive_tab_gml));
-
+    auto& tab = *TRY(tab_widget.try_add_tab<FileManager::Properties::ArchiveTab>("Archive"_string));
     auto statistics = TRY(zip.calculate_statistics());
 
     tab.find_descendant_of_type_named<GUI::Label>("archive_file_count")->set_text(String::number(statistics.file_count()));
@@ -283,9 +279,7 @@ ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, Non
     }
     auto loader = loader_or_error.release_value();
 
-    auto& tab = tab_widget.add_tab<GUI::Widget>("Audio"_string);
-    TRY(tab.load_from_gml(properties_window_audio_tab_gml));
-
+    auto& tab = *TRY(tab_widget.try_add_tab<FileManager::Properties::AudioTab>("Audio"_string));
     tab.find_descendant_of_type_named<GUI::Label>("audio_type")->set_text(TRY(String::from_byte_string(loader->format_name())));
     auto duration_seconds = loader->total_samples() / loader->sample_rate();
     tab.find_descendant_of_type_named<GUI::Label>("audio_duration")->set_text(human_readable_digital_time(duration_seconds));
@@ -365,9 +359,7 @@ ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, Nonn
     auto font_info = font_info_or_error.release_value();
     auto& typeface = font_info.typeface;
 
-    auto& tab = tab_widget.add_tab<GUI::Widget>("Font"_string);
-    TRY(tab.load_from_gml(properties_window_font_tab_gml));
-
+    auto& tab = *TRY(tab_widget.try_add_tab<FileManager::Properties::FontTab>("Font"_string));
     String format_name;
     switch (font_info.format) {
     case FontInfo::Format::BitmapFont:
@@ -410,9 +402,7 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
     if (!image_decoder)
         return {};
 
-    auto& tab = tab_widget.add_tab<GUI::Widget>("Image"_string);
-    TRY(tab.load_from_gml(properties_window_image_tab_gml));
-
+    auto& tab = *TRY(tab_widget.try_add_tab<FileManager::Properties::ImageTab>("Image"_string));
     tab.find_descendant_of_type_named<GUI::Label>("image_type")->set_text(TRY(String::from_utf8(mime_type)));
     tab.find_descendant_of_type_named<GUI::Label>("image_size")->set_text(TRY(String::formatted("{} x {}", image_decoder->width(), image_decoder->height())));
 
@@ -519,9 +509,7 @@ ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, Nonnu
         return {};
     }
 
-    auto& tab = tab_widget.add_tab<GUI::Widget>("PDF"_string);
-    TRY(tab.load_from_gml(properties_window_pdf_tab_gml));
-
+    auto& tab = *TRY(tab_widget.try_add_tab<FileManager::Properties::PDFTab>("PDF"_string));
     tab.find_descendant_of_type_named<GUI::Label>("pdf_version")->set_text(TRY(String::formatted("{}.{}", document->version().major, document->version().minor)));
     tab.find_descendant_of_type_named<GUI::Label>("pdf_page_count")->set_text(String::number(document->get_page_count()));
 
