@@ -546,7 +546,7 @@ ErrorOr<int> run_in_desktop_mode()
                     file_context_menu->add_separator();
                 }
 
-                if (node.full_path().ends_with(".zip"sv, AK::CaseSensitivity::CaseInsensitive)) {
+                if (node.name.ends_with(".zip"sv, AK::CaseSensitivity::CaseInsensitive)) {
                     file_context_menu->add_action(unzip_archive_action);
                     file_context_menu->add_separator();
                 }
@@ -1206,7 +1206,7 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
                     file_context_menu->add_separator();
                 }
 
-                if (node.full_path().ends_with(".zip"sv, AK::CaseSensitivity::CaseInsensitive)) {
+                if (node.name.ends_with(".zip"sv, AK::CaseSensitivity::CaseInsensitive)) {
                     file_context_menu->add_action(unzip_archive_action);
                     file_context_menu->add_separator();
                 }
