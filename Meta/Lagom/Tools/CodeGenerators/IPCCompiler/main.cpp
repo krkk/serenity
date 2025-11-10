@@ -680,7 +680,7 @@ public:
     virtual ~@endpoint.name@Stub() override { }
 
     virtual u32 magic() const override { return @endpoint.magic@; }
-    virtual ByteString name() const override { return "@endpoint.name@"; }
+    virtual StringView name() const override { return "@endpoint.name@"sv; }
 
     virtual ErrorOr<OwnPtr<IPC::MessageBuffer>> handle(const IPC::Message& message) override
     {
