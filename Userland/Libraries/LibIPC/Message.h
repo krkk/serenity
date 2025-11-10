@@ -64,7 +64,7 @@ public:
 
     virtual u32 endpoint_magic() const = 0;
     virtual int message_id() const = 0;
-    virtual char const* message_name() const = 0;
+    virtual StringView message_name() const = 0;
     virtual bool valid() const = 0;
     virtual ErrorOr<MessageBuffer> encode() const = 0;
 
