@@ -317,14 +317,18 @@ ByteString constructor_for_message(ByteString const& name, Vector<Parameter> con
         if (i != parameters.size() - 1)
             builder.append(", "sv);
     }
-    builder.append(") : "sv);
+    builder.append(R"~~~()
+        : )~~~"sv);
     for (size_t i = 0; i < parameters.size(); ++i) {
         auto const& parameter = parameters[i];
         builder.appendff("m_{}(move({}))", parameter.name, parameter.name);
         if (i != parameters.size() - 1)
-            builder.append(", "sv);
+            builder.append(R"~~~(
+        , )~~~"sv);
     }
-    builder.append(" {}"sv);
+    builder.append(R"~~~(
+    {
+    })~~~"sv);
     return builder.to_byte_string();
 }
 
@@ -336,16 +340,19 @@ void do_message(SourceGenerator message_generator, ByteString const& name, Vecto
     message_generator.set("message.response_type", response_type);
     message_generator.set("message.constructor", constructor_for_message(pascal_name, parameters));
 
-    message_generator.appendln(R"~~~(
+    message_generator.append(R"~~~(
 class @message.pascal_name@ final : public IPC::Message {
 public:)~~~");
 
     if (!response_type.is_empty())
         message_generator.appendln(R"~~~(
-   typedef class @message.response_type@ ResponseType;)~~~");
+    typedef class @message.response_type@ ResponseType;)~~~");
 
     message_generator.appendln(R"~~~(
-    @message.pascal_name@(decltype(nullptr)) : m_ipc_message_valid(false) { }
+    @message.pascal_name@(decltype(nullptr))
+        : m_ipc_message_valid(false)
+    {
+    }
     @message.pascal_name@(@message.pascal_name@ const&) = default;
     @message.pascal_name@(@message.pascal_name@&&) = default;
     @message.pascal_name@& operator=(@message.pascal_name@ const&) = default;
@@ -366,7 +373,7 @@ public:)~~~");
     }
 
     message_generator.appendln(R"~~~(
-    virtual ~@message.pascal_name@() override {}
+    virtual ~@message.pascal_name@() override { }
 
     virtual u32 endpoint_magic() const override { return @endpoint.magic@; }
     virtual i32 message_id() const override { return (int)MessageID::@message.pascal_name@; }
@@ -440,7 +447,7 @@ public:)~~~");
         parameter_generator.set("parameter.type", parameter.type);
         parameter_generator.set("parameter.name", parameter.name);
         parameter_generator.appendln(R"~~~(
-    const @parameter.type@& @parameter.name@() const { return m_@parameter.name@; }
+    @parameter.type@ const& @parameter.name@() const { return m_@parameter.name@; }
     @parameter.type@ take_@parameter.name@() { return move(m_@parameter.name@); })~~~");
     }
 
@@ -452,11 +459,12 @@ private:
         auto parameter_generator = message_generator.fork();
         parameter_generator.set("parameter.type", parameter.type);
         parameter_generator.set("parameter.name", parameter.name);
-        parameter_generator.appendln(R"~~~(
+        parameter_generator.append(R"~~~(
     @parameter.type@ m_@parameter.name@ {};)~~~");
     }
 
-    message_generator.appendln("\n};");
+    message_generator.appendln(R"~~~(
+};)~~~");
 }
 
 void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& endpoint, Message const& message)
@@ -480,7 +488,7 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
         message_generator.set("try_prefix_maybe", is_try ? "try_" : "");
 
         message_generator.set("handler_name", name);
-        message_generator.appendln(R"~~~(
+        message_generator.append(R"~~~(
     @message.complex_return_type@ @try_prefix_maybe@@async_prefix_maybe@@handler_name@()~~~");
 
         for (size_t i = 0; i < parameters.size(); ++i) {
@@ -493,7 +501,8 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
                 argument_generator.append(", ");
         }
 
-        message_generator.append(") {");
+        message_generator.append(R"~~~()
+    {)~~~");
 
         if (is_synchronous && !is_try) {
             if (return_type != "void") {
@@ -513,7 +522,7 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
         } else {
             message_generator.append(R"~~~(
         // FIXME: Handle post_message failures.
-        (void) m_connection.post_message(Messages::@endpoint.name@::@message.pascal_name@ { )~~~");
+        (void)m_connection.post_message(Messages::@endpoint.name@::@message.pascal_name@ { )~~~");
         }
 
         for (size_t i = 0; i < parameters.size(); ++i) {
@@ -548,14 +557,14 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
             return IPC::ErrorCode::PeerDisconnected;
         })~~~");
             if (inner_return_type != "void") {
-                message_generator.appendln(R"~~~(
+                message_generator.append(R"~~~(
         return move(*result);)~~~");
             } else {
-                message_generator.appendln(R"~~~(
+                message_generator.append(R"~~~(
         return { };)~~~");
             }
         } else {
-            message_generator.appendln(" });");
+            message_generator.append(")));");
         }
 
         message_generator.appendln(R"~~~(
@@ -574,7 +583,7 @@ void build_endpoint(SourceGenerator generator, Endpoint const& endpoint)
     generator.set("endpoint.name", endpoint.name);
     generator.set("endpoint.magic", ByteString::number(endpoint.magic));
 
-    generator.appendln("\nnamespace Messages::@endpoint.name@ {");
+    generator.appendln("namespace Messages::@endpoint.name@ {");
 
     HashMap<ByteString, int> message_ids = build_message_ids_for_endpoint(generator.fork(), endpoint);
 
@@ -598,7 +607,8 @@ public:
 
     @endpoint.name@Proxy(IPC::Connection<LocalEndpoint, PeerEndpoint>& connection, Tag)
         : m_connection(connection)
-    { })~~~");
+    {
+    })~~~");
 
     for (auto const& message : endpoint.messages)
         do_message_for_proxy(generator.fork(), endpoint, message);
@@ -636,8 +646,7 @@ public:
             return Error::from_string_literal("Endpoint magic number mismatch, not my message!");
         }
 
-        auto message_id = TRY(stream.read_value<i32>());)~~~");
-    generator.appendln(R"~~~(
+        auto message_id = TRY(stream.read_value<i32>());
 
         switch (message_id) {)~~~");
 
@@ -671,7 +680,6 @@ public:
     generator.appendln(R"~~~(
         VERIFY_NOT_REACHED();
     }
-
 };
 
 class @endpoint.name@Stub : public IPC::Stub {
@@ -707,22 +715,22 @@ public:
         case (int)Messages::@endpoint.name@::MessageID::@message.pascal_name@: {)~~~");
             if (returns_something) {
                 if (message.outputs.is_empty()) {
-                    message_generator.appendln(R"~~~(
-            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.pascal_name@&>(message);
+                    message_generator.append(R"~~~(
+            [[maybe_unused]] auto& request = static_cast<Messages::@endpoint.name@::@message.pascal_name@ const&>(message);
             @handler_name@(@arguments@);
             auto response = Messages::@endpoint.name@::@message.response_type@ { };
             return make<IPC::MessageBuffer>(TRY(response.encode()));)~~~");
                 } else {
-                    message_generator.appendln(R"~~~(
-            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.pascal_name@&>(message);
+                    message_generator.append(R"~~~(
+            [[maybe_unused]] auto& request = static_cast<Messages::@endpoint.name@::@message.pascal_name@ const&>(message);
             auto response = @handler_name@(@arguments@);
             if (!response.valid())
                 return Error::from_string_literal("Failed to handle @endpoint.name@::@message.pascal_name@ message");
             return make<IPC::MessageBuffer>(TRY(response.encode()));)~~~");
                 }
             } else {
-                message_generator.appendln(R"~~~(
-            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.pascal_name@&>(message);
+                message_generator.append(R"~~~(
+            [[maybe_unused]] auto& request = static_cast<Messages::@endpoint.name@::@message.pascal_name@ const&>(message);
             @handler_name@(@arguments@);
             return nullptr;)~~~");
             }
@@ -747,7 +755,7 @@ public:
             message_generator.set("message.complex_return_type", return_type);
 
             message_generator.set("handler_name", name);
-            message_generator.appendln(R"~~~(
+            message_generator.append(R"~~~(
     virtual @message.complex_return_type@ @handler_name@()~~~");
 
             auto make_argument_type = [](ByteString const& type) {
@@ -787,7 +795,7 @@ private:
 };
 
 #if defined(AK_COMPILER_CLANG) || __GNUC__ >= 15
-#pragma GCC diagnostic pop
+#    pragma GCC diagnostic pop
 #endif)~~~");
 }
 
@@ -817,8 +825,8 @@ void build(StringBuilder& builder, Vector<Endpoint> const& endpoints)
 #include <LibIPC/Stub.h>
 
 #if defined(AK_COMPILER_CLANG) || __GNUC__ >= 15
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdefaulted-function-deleted"
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wdefaulted-function-deleted"
 #endif
 )~~~");
 
