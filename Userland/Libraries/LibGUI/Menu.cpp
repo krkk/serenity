@@ -224,7 +224,7 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
         auto& submenu = *item.submenu();
         submenu.realize_if_needed(m_current_default_action.strong_ref());
         auto icon = submenu.icon() ? submenu.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
-        ConnectionToWindowServer::the().async_add_menu_item(m_menu_id, item_id, submenu.menu_id(), submenu.name().to_byte_string(), true, true, false, false, false, "", icon, false);
+        ConnectionToWindowServer::the().async_add_menu_item(m_menu_id, item_id, submenu.menu_id(), submenu.name().to_byte_string(), true, true, false, false, false, ""sv, icon, false);
         break;
     }
     case MenuItem::Type::Invalid:
