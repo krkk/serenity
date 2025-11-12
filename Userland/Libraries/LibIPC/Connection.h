@@ -37,6 +37,7 @@ public:
         Sync,
     };
     ErrorOr<void> post_message(Message const&, MessageKind = MessageKind::Async);
+    ErrorOr<void> post_message(MessageBuffer, MessageKind = MessageKind::Async);
 
     void shutdown();
     virtual void die() { }
@@ -57,7 +58,6 @@ protected:
     ErrorOr<void> drain_messages_from_peer();
     void try_parse_messages(Vector<u8> const& bytes, size_t& index);
 
-    ErrorOr<void> post_message(MessageBuffer, MessageKind);
     void handle_messages();
 
     IPC::Stub& m_local_stub;
@@ -110,7 +110,7 @@ protected:
     template<typename MessageType, typename Endpoint>
     OwnPtr<MessageType> wait_for_specific_endpoint_message()
     {
-        if (auto message = wait_for_specific_endpoint_message_impl(Endpoint::static_magic(), MessageType::static_message_id()))
+        if (auto message = wait_for_specific_endpoint_message_impl(Endpoint::static_magic(), MessageType::static_message_id))
             return message.template release_nonnull<MessageType>();
         return {};
     }

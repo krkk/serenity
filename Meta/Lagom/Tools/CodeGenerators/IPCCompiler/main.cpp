@@ -71,7 +71,7 @@ static bool is_primitive_type(ByteString const& type)
 static bool is_simple_type(ByteString const& type)
 {
     // Small types that it makes sense just to pass by value.
-    return type.is_one_of("AK::CaseSensitivity", "AK::Duration", "Gfx::Color", "Web::DevicePixels", "Gfx::IntPoint", "Gfx::FloatPoint", "Web::DevicePixelPoint", "Gfx::IntSize", "Gfx::FloatSize", "Web::DevicePixelSize", "Core::File::OpenMode", "Web::Cookie::Source", "Web::EventResult", "Web::HTML::AllowMultipleFiles", "Web::HTML::AudioPlayState", "Web::HTML::HistoryHandlingBehavior", "WebView::PageInfoType");
+    return type.is_one_of("AK::CaseSensitivity", "AK::Duration", "StringView", "Gfx::Color", "Web::DevicePixels", "Gfx::IntPoint", "Gfx::FloatPoint", "Web::DevicePixelPoint", "Gfx::IntSize", "Gfx::FloatSize", "Web::DevicePixelSize", "Core::File::OpenMode", "Web::Cookie::Source", "Web::EventResult", "Web::HTML::AllowMultipleFiles", "Web::HTML::AudioPlayState", "Web::HTML::HistoryHandlingBehavior", "WebView::PageInfoType");
 }
 
 static bool is_primitive_or_simple_type(ByteString const& type)
@@ -376,8 +376,9 @@ public:)~~~");
     virtual ~@message.pascal_name@() override { }
 
     virtual u32 endpoint_magic() const override { return @endpoint.magic@; }
+    static constexpr u32 static_endpoint_magic = @endpoint.magic@;
     virtual i32 message_id() const override { return (int)MessageID::@message.pascal_name@; }
-    static i32 static_message_id() { return (int)MessageID::@message.pascal_name@; }
+    static constexpr i32 static_message_id = (int)MessageID::@message.pascal_name@;
     virtual StringView message_name() const override { return "@endpoint.name@::@message.pascal_name@"sv; }
 
     static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(Stream& stream, Queue<IPC::File>& files)
@@ -395,8 +396,7 @@ public:)~~~");
         else
             parameter_generator.set("parameter.initial_value", "{}");
 
-        parameter_generator.appendln(R"~~~(
-        auto @parameter.name@ = TRY((decoder.decode<@parameter.type@>()));)~~~");
+        parameter_generator.appendln("        auto @parameter.name@ = TRY((decoder.decode<@parameter.type@>()));");
 
         if (parameter.attributes.contains_slow("UTF8")) {
             parameter_generator.appendln(R"~~~(
@@ -418,28 +418,63 @@ public:)~~~");
         return make<@message.pascal_name@>(@message.constructor_call_parameters@);
     })~~~");
 
-    message_generator.appendln(R"~~~(
+    message_generator.append(R"~~~(
     virtual bool valid() const override { return m_ipc_message_valid; }
 
-    virtual ErrorOr<IPC::MessageBuffer> encode() const override
-    {
-        VERIFY(valid());
+    static ErrorOr<IPC::MessageBuffer> encode_static()~~~");
 
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        auto const& parameter = parameters[i];
+        auto argument_generator = message_generator.fork();
+
+        auto type = parameter.type;
+        if (type.is_one_of("ByteString"sv, "String"sv))
+            type = "StringView"sv;
+        argument_generator.set("argument.type", type);
+
+        argument_generator.set("argument.name", parameter.name);
+        if (is_primitive_or_simple_type(parameters[i].type) || parameter.type.is_one_of("ByteString"sv, "String"sv))
+            argument_generator.append("@argument.type@ a_@argument.name@");
+        else
+            argument_generator.append("@argument.type@ const& a_@argument.name@");
+        if (i != parameters.size() - 1)
+            argument_generator.append(", ");
+    }
+
+    message_generator.appendln(R"~~~()
+    {
         IPC::MessageBuffer buffer;
         IPC::Encoder stream(buffer);
-        TRY(stream.encode(endpoint_magic()));
-        TRY(stream.encode((int)MessageID::@message.pascal_name@));)~~~");
+        TRY(stream.encode(static_endpoint_magic));
+        TRY(stream.encode(static_message_id));)~~~");
 
     for (auto const& parameter : parameters) {
         auto parameter_generator = message_generator.fork();
 
         parameter_generator.set("parameter.name", parameter.name);
-        parameter_generator.appendln(R"~~~(
-        TRY(stream.encode(m_@parameter.name@));)~~~");
+        parameter_generator.appendln("        TRY(stream.encode(a_@parameter.name@));");
     }
 
-    message_generator.appendln(R"~~~(
+    message_generator.append(R"~~~(
         return buffer;
+    }
+
+    virtual ErrorOr<IPC::MessageBuffer> encode() const override
+    {
+        VERIFY(valid());
+        return encode_static()~~~");
+
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        auto const& parameter = parameters[i];
+        auto parameter_generator = message_generator.fork();
+
+        parameter_generator.set("parameter.name", parameter.name);
+        parameter_generator.append("m_@parameter.name@");
+        if (i != parameters.size() - 1)
+            parameter_generator.append(", ");
+    }
+
+    message_generator.appendln(R"~~~();
     })~~~");
 
     for (auto const& parameter : parameters) {
@@ -494,7 +529,12 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
         for (size_t i = 0; i < parameters.size(); ++i) {
             auto const& parameter = parameters[i];
             auto argument_generator = message_generator.fork();
-            argument_generator.set("argument.type", parameter.type);
+
+            auto type = parameter.type;
+            if (type.is_one_of("ByteString"sv, "String"sv) && !is_synchronous && !is_try)
+                type = "StringView"sv;
+            argument_generator.set("argument.type", type);
+
             argument_generator.set("argument.name", parameter.name);
             argument_generator.append("@argument.type@ @argument.name@");
             if (i != parameters.size() - 1)
@@ -522,14 +562,14 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
         } else {
             message_generator.append(R"~~~(
         // FIXME: Handle post_message failures.
-        (void)m_connection.post_message(Messages::@endpoint.name@::@message.pascal_name@ { )~~~");
+        (void)m_connection.post_message(MUST(Messages::@endpoint.name@::@message.pascal_name@::encode_static()~~~");
         }
 
         for (size_t i = 0; i < parameters.size(); ++i) {
             auto const& parameter = parameters[i];
             auto argument_generator = message_generator.fork();
             argument_generator.set("argument.name", parameter.name);
-            if (is_primitive_or_simple_type(parameters[i].type))
+            if (is_primitive_or_simple_type(parameters[i].type) || parameter.type.is_one_of("ByteString"sv, "String"sv))
                 argument_generator.append("@argument.name@");
             else
                 argument_generator.append("move(@argument.name@)");
