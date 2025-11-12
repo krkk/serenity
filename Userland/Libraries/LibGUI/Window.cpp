@@ -877,7 +877,7 @@ void Window::force_update()
     if (!is_visible())
         return;
     auto rect = this->rect();
-    ConnectionToWindowServer::the().async_invalidate_rect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true);
+    ConnectionToWindowServer::the().async_invalidate_rect(m_window_id, Array { Gfx::IntRect { 0, 0, rect.width(), rect.height() } }, true);
 }
 
 void Window::update(Gfx::IntRect const& a_rect)

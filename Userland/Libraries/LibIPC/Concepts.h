@@ -53,6 +53,11 @@ template<typename T>
 constexpr inline bool IsVector<Vector<T>> = true;
 
 template<typename T>
+constexpr inline bool IsReadonlySpan = false;
+template<typename T>
+constexpr inline bool IsReadonlySpan<ReadonlySpan<T>> = true;
+
+template<typename T>
 constexpr inline bool IsArray = false;
 template<typename T, size_t N>
 constexpr inline bool IsArray<Array<T, N>> = true;
@@ -70,6 +75,9 @@ concept SharedSingleProducerCircularQueue = Detail::IsSharedSingleProducerCircul
 
 template<typename T>
 concept Variant = Detail::IsVariant<T>;
+
+template<typename T>
+concept ReadonlySpan = Detail::IsReadonlySpan<T>;
 
 template<typename T>
 concept Vector = Detail::IsVector<T>;
