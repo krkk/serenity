@@ -533,12 +533,10 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
             auto argument_generator = message_generator.fork();
 
             auto type = parameter.type;
-            if (!is_synchronous && !is_try) {
-                if (type.is_one_of("ByteString"sv, "String"sv))
-                    type = "StringView"sv;
-                else if (type.starts_with("Vector<"sv))
-                    type = type.replace("Vector"sv, "ReadonlySpan"sv, ReplaceMode::FirstOnly);
-            }
+            if (type.is_one_of("ByteString"sv, "String"sv))
+                type = "StringView"sv;
+            else if (type.starts_with("Vector<"sv))
+                type = type.replace("Vector"sv, "ReadonlySpan"sv, ReplaceMode::FirstOnly);
             argument_generator.set("argument.type", type);
 
             argument_generator.set("argument.name", parameter.name);

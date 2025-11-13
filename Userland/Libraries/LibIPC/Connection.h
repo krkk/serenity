@@ -92,7 +92,7 @@ public:
     template<typename RequestType, typename... Args>
     NonnullOwnPtr<typename RequestType::ResponseType> send_sync(Args&&... args)
     {
-        MUST(post_message(RequestType(forward<Args>(args)...), MessageKind::Sync));
+        MUST(post_message(MUST(RequestType::encode_static(forward<Args>(args)...)), MessageKind::Sync));
         auto response = wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
         VERIFY(response);
         return response.release_nonnull();
@@ -101,7 +101,10 @@ public:
     template<typename RequestType, typename... Args>
     OwnPtr<typename RequestType::ResponseType> send_sync_but_allow_failure(Args&&... args)
     {
-        if (post_message(RequestType(forward<Args>(args)...), MessageKind::Sync).is_error())
+        auto maybe_message = RequestType::encode_static(forward<Args>(args)...);
+        if (maybe_message.is_error())
+            return nullptr;
+        if (post_message(maybe_message.release_value(), MessageKind::Sync).is_error())
             return nullptr;
         return wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
     }
